@@ -22,7 +22,7 @@ export interface DisasterModule {
   title: string;
   description: string;
   learningContent: string;
-  icon: string; // Emoji or Lucide icon name
+  icon: string;
   color: string;
   quizItems: QuizItem[];
 }
@@ -32,49 +32,18 @@ export interface PlayerStats {
   quizzesCompleted: number;
   quizzesWon: number;
   questionsAnswered: number;
-  totalAnswerTime: number; // in seconds, to calc average
-  modulesRead: string[]; // unique IDs
-  dailyQuestsCleared: number;
-  highestRank: string;
+  totalAnswerTime: number;
+  modulesRead: string[];
 }
 
-export interface Achievement {
-  id: string;
-  title: string;
-  description: string;
-  icon: string;
-  requirement: (stats: PlayerStats, progress: UserProgress) => boolean;
-  rewardType: 'xp' | 'avatar' | 'border';
-  rewardValue: string | number;
-}
-
-export interface CosmeticItem {
-  id: string;
-  type: 'avatar' | 'border';
-  content: string; // Emoji char or CSS class for border
-  name: string;
-  unlockDesc: string;
-}
-
-export interface UserProgress {
-  userId: string;
-  username: string;
-  bio: string;
-  profileImage?: string; // Base64
-  album: string[]; // Array of Base64 strings
-  
+export interface AppProgress {
   xp: number;
   level: number;
   completedModules: string[];
-  highScores: Record<string, number>; // moduleID -> score
+  highScores: Record<string, number>;
   dailyStreak: number;
   lastLoginDate: string;
-  
   stats: PlayerStats;
-  unlockedAchievements: string[];
-  unlockedCosmetics: string[];
-  currentAvatar: string;
-  currentBorder: string;
 }
 
 export interface RegionData {
@@ -90,12 +59,5 @@ export type DifficultyLevel = 'Easy' | 'Medium' | 'Hard' | 'Intense' | 'Impossib
 export interface QuizConfig {
   difficulty: DifficultyLevel;
   questionCount: number;
-  timePerQuestion: number; // in seconds
-}
-
-export interface Rank {
-  id: string;
-  name: string;
-  minXp: number;
-  icon: string;
+  timePerQuestion: number;
 }

@@ -1,20 +1,46 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# READYPH - Disaster Preparedness App
 
-# Run and deploy your AI Studio app
+## Overview
+READYPH is a Progressive Web App (PWA) designed to educate users about disaster preparedness in the Philippines through interactive quizzes, hazard maps, and gamified learning modules.
 
-This contains everything you need to run your app locally.
+## File Structure
+Ensure your project folder contains the following files:
 
-View your app in AI Studio: https://ai.studio/apps/drive/1VdYeEKPSfFi-Kc8bD-3p3EuftRpYJ3y4
+```text
+/
+├── index.html              # Entry point, loads styles and scripts
+├── index.tsx               # React root mounting logic
+├── App.tsx                 # Main application component and UI logic
+├── constants.ts            # Static data (Questions, Modules, Regions)
+├── types.ts                # TypeScript interfaces
+├── manifest.json           # PWA configuration for mobile install
+├── metadata.json           # App metadata
+└── services/
+    └── geminiService.ts    # AI integration logic
+```
 
-## Run Locally
+## How to Run Locally
 
-**Prerequisites:**  Node.js
+Since this project uses ES Modules directly in the browser (via `importmap` in `index.html`), you cannot just double-click `index.html`. You must serve it over HTTP.
 
+### Option 1: VS Code Live Server (Recommended)
+1.  Open the project folder in **VS Code**.
+2.  Install the **Live Server** extension.
+3.  Right-click `index.html` and select **"Open with Live Server"**.
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+### Option 2: Node.js Serve
+1.  Open your terminal in the project folder.
+2.  Run: `npx serve .`
+3.  Open the URL provided (usually `http://localhost:3000`).
+
+## How to Install on Mobile (PWA)
+
+1.  **Deploy**: Host these files on a secure server (HTTPS) like GitHub Pages, Vercel, or Netlify.
+2.  **Android**: Open in Chrome -> Tap Menu (⋮) -> **"Add to Home Screen"** or **"Install App"**.
+3.  **iOS**: Open in Safari -> Tap Share -> **"Add to Home Screen"**.
+
+## Features
+*   **7 Learning Modules**: Earthquake, Typhoon, Volcano, Landslide, Storm Surge, Industrial, Epidemic.
+*   **Gamification**: XP, Ranks, Leaderboards, and Achievements.
+*   **Interactive Map**: 3D Isometric view of Philippine regions with hazard data.
+*   **AI Integration**: Explanations generated via Google Gemini API (requires API Key).
