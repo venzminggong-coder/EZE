@@ -1,0 +1,6 @@
+{
+  "appId": "com.readyph.app",
+  "appName": "READYPH",
+  "webDir": "dist",
+  "bundledWebRuntime": false
+}
