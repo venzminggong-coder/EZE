@@ -4,8 +4,10 @@ export enum DisasterType {
   Volcano = 'Volcanic Eruption',
   Landslide = 'Landslide',
   StormSurge = 'Storm Surge',
+  Flood = 'Flood',
   Industrial = 'Industrial Hazard',
-  Epidemic = 'Epidemic'
+  Epidemic = 'Epidemic',
+  Fire = 'Fire Hazard'
 }
 
 export interface QuizItem {
@@ -46,12 +48,27 @@ export interface AppProgress {
   stats: PlayerStats;
 }
 
+export type CharacterType = 'Fireman' | 'Scientist' | 'Researcher' | 'Worker' | 'NGO' | 'Student' | 'Teacher';
+
+export interface Character {
+  type: CharacterType;
+  name: string;
+  emoji: string;
+  role: string;
+  color: string;
+  description: string;
+}
+
 export interface RegionData {
   id: string;
   name: string;
+  islandGroup: 'Luzon' | 'Visayas' | 'Mindanao';
   riskLevel: 'Low' | 'Medium' | 'High';
   commonHazards: DisasterType[];
   info: string;
+  details: string[];
+  coordinates: { x: number, y: number };
+  color: string;
 }
 
 export type DifficultyLevel = 'Easy' | 'Medium' | 'Hard' | 'Intense' | 'Impossible';

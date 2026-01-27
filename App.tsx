@@ -1,33 +1,31 @@
-import React, { useState, useEffect } from 'react';
-import { MODULES, PH_REGIONS, RANDOM_FACTS } from './constants';
-import { DisasterModule, QuizItem, AppProgress, DisasterType, QuizConfig, DifficultyLevel } from './types';
-import { generateExplanation, generateDailyTrivia } from './services/geminiService';
+
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { MODULES, PH_REGIONS, RANDOM_FACTS, CHARACTERS, CHARACTER_QUOTES } from './constants';
+import { DisasterModule, QuizItem, AppProgress, DisasterType, QuizConfig, DifficultyLevel, Character, RegionData } from './types';
+import { generateDailyTrivia, generateExplanation } from './services/geminiService';
 import { 
   BookOpen, 
-  Trophy, 
   Map as MapIcon, 
   Home, 
   ChevronLeft, 
   CheckCircle, 
-  XCircle, 
   Brain, 
-  AlertTriangle,
-  Flame,
-  Microscope,
-  Leaf,
+  Zap, 
+  MessageCircle, 
+  ShieldAlert, 
+  Loader2,
   Info,
-  Lightbulb,
-  Timer,
+  Search,
+  Users,
+  AlertTriangle,
   Pause,
   Play,
-  RotateCcw,
-  LogOut,
-  Zap,
-  Clock
+  Clock,
+  RotateCcw
 } from 'lucide-react';
 
 // --- Services & Utils ---
-const STORAGE_KEY = 'readyph_progress_v2';
+const STORAGE_KEY = 'readyph_v7_state';
 
 const saveProgress = (progress: AppProgress) => {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
@@ -35,9 +33,7 @@ const saveProgress = (progress: AppProgress) => {
 
 const loadProgress = (): AppProgress => {
   const stored = localStorage.getItem(STORAGE_KEY);
-  if (stored) {
-      return JSON.parse(stored);
-  }
+  if (stored) return JSON.parse(stored);
   return {
     xp: 0,
     level: 1,
@@ -56,7 +52,6 @@ const loadProgress = (): AppProgress => {
   };
 };
 
-// Fisher-Yates Shuffle
 function shuffleArray<T>(array: T[]): T[] {
   const arr = [...array];
   for (let i = arr.length - 1; i > 0; i--) {
@@ -66,104 +61,132 @@ function shuffleArray<T>(array: T[]): T[] {
   return arr;
 }
 
-const getLevel = (xp: number) => {
-    return Math.floor(xp / 1000) + 1;
-}
+const getLevel = (xp: number) => Math.floor(xp / 1000) + 1;
 
-// --- Philippines SVG Map Component ---
-const getHazardIcon = (type: DisasterType) => {
+const getModuleBorderClass = (type: DisasterType) => {
   switch (type) {
-    case DisasterType.Earthquake: return '📉';
-    case DisasterType.Typhoon: return '🌀';
-    case DisasterType.Volcano: return '🌋';
-    case DisasterType.Landslide: return '⛰️';
-    case DisasterType.StormSurge: return '🌊';
-    case DisasterType.Industrial: return '🏭';
-    case DisasterType.Epidemic: return '🦠';
-    default: return '⚠️';
+    case DisasterType.Earthquake: return 'border-earthquake';
+    case DisasterType.Typhoon: return 'border-typhoon';
+    case DisasterType.Volcano: return 'border-volcano';
+    case DisasterType.Fire: return 'border-fire';
+    case DisasterType.Landslide: return 'border-landslide';
+    case DisasterType.StormSurge: return 'border-stormsurge';
+    case DisasterType.Industrial: return 'border-industrial';
+    case DisasterType.Epidemic: return 'border-epidemic';
+    default: return 'border-slate-200 border-4 rounded-3xl';
   }
 };
 
-const PhilippinesMap = ({ onSelectRegion, selectedRegionId }: { onSelectRegion: (id: string) => void, selectedRegionId: string | null }) => {
-    const regions = [
-        { id: 'CAR', cx: 130, cy: 80, r: 15, label: 'CAR' },
-        { id: 'R1', cx: 100, cy: 100, r: 15, label: 'I' },
-        { id: 'R2', cx: 160, cy: 90, r: 18, label: 'II' },
-        { id: 'R3', cx: 130, cy: 140, r: 15, label: 'III' },
-        { id: 'NCR', cx: 130, cy: 170, r: 10, label: 'NCR' },
-        { id: 'R4A', cx: 150, cy: 180, r: 15, label: 'IV-A' },
-        { id: 'R4B', cx: 100, cy: 250, r: 20, label: 'IV-B' }, 
-        { id: 'R5', cx: 190, cy: 230, r: 18, label: 'V' },
-        { id: 'R6', cx: 150, cy: 300, r: 18, label: 'VI' },
-        { id: 'R7', cx: 190, cy: 320, r: 15, label: 'VII' },
-        { id: 'R8', cx: 230, cy: 280, r: 18, label: 'VIII' },
-        { id: 'R9', cx: 130, cy: 400, r: 15, label: 'IX' },
-        { id: 'R10', cx: 180, cy: 380, r: 15, label: 'X' },
-        { id: 'R11', cx: 220, cy: 430, r: 15, label: 'XI' },
-        { id: 'R12', cx: 170, cy: 430, r: 15, label: 'XII' },
-        { id: 'R13', cx: 220, cy: 370, r: 15, label: 'XIII' },
-        { id: 'BARMM', cx: 160, cy: 410, r: 15, label: 'BA' },
-    ];
-
-    return (
-        <svg viewBox="0 0 300 500" className="w-full h-full drop-shadow-2xl">
-            <defs>
-              <filter id="shadow">
-                  <feDropShadow dx="2" dy="4" stdDeviation="3" floodOpacity="0.3"/>
-              </filter>
-            </defs>
-            <rect width="300" height="500" fill="#3b82f6" rx="20" opacity="0.1" />
-
-            <path d="M130,50 L180,70 L190,130 L160,200 L240,260 L240,300 L200,350 L230,450 L150,480 L100,420 L100,300 L50,250 L80,200 L110,150 Z" fill="#86efac" stroke="#166534" strokeWidth="2" filter="url(#shadow)" />
-            
-            {regions.map((r) => {
-                const isSelected = selectedRegionId === r.id;
-                const regionData = PH_REGIONS.find(d => d.id === r.id);
-                const primaryHazardIcon = regionData ? getHazardIcon(regionData.commonHazards[0]) : '';
-
-                return (
-                    <g key={r.id} onClick={() => onSelectRegion(r.id)} className="cursor-pointer hover:opacity-80">
-                        <circle cx={r.cx} cy={r.cy+4} r={r.r} fill="#14532d" /> 
-                        
-                        <circle 
-                            cx={r.cx} 
-                            cy={r.cy} 
-                            r={isSelected ? r.r + 5 : r.r} 
-                            fill={isSelected ? '#2563eb' : '#fff'} 
-                            stroke={isSelected ? '#fff' : '#15803d'}
-                            strokeWidth="2"
-                            className="transition-all duration-300 shadow-sm"
-                        />
-                        <circle cx={r.cx + 10} cy={r.cy - 10} r="8" fill="#fef08a" stroke="#ca8a04" strokeWidth="1" />
-                        <text x={r.cx + 10} y={r.cy - 10} dy="0.3em" textAnchor="middle" fontSize="10">{primaryHazardIcon}</text>
-                        
-                        <text 
-                            x={r.cx} 
-                            y={r.cy} 
-                            dy="0.3em" 
-                            textAnchor="middle" 
-                            className={`text-[8px] font-bold pointer-events-none ${isSelected ? 'fill-white' : 'fill-slate-800'}`}
-                        >
-                            {r.label}
-                        </text>
-                    </g>
-                );
-            })}
-        </svg>
-    );
+const getDifficultyTimer = (difficulty: DifficultyLevel) => {
+  switch (difficulty) {
+    case 'Easy': return 30;
+    case 'Medium': return 20;
+    case 'Hard': return 15;
+    case 'Intense': return 10;
+    case 'Impossible': return 5;
+    default: return 20;
+  }
 };
 
-const GuideCharacter = ({ onClick, message }: { onClick: () => void, message: string }) => (
-  <div className="absolute top-20 right-2 flex flex-col items-end cursor-pointer z-50 group" onClick={onClick}>
-     <div className="bg-white p-2 rounded-xl rounded-br-none shadow-lg mb-1 max-w-[140px] text-[10px] border border-blue-100 relative animate-fade-in">
-        <Lightbulb className="w-3 h-3 text-yellow-500 absolute -top-1.5 -left-1.5 bg-white rounded-full border" />
-        <p className="text-gray-700 leading-tight font-medium italic">"{message}"</p>
-     </div>
-     <div className="text-3xl drop-shadow-md hover:scale-110 transition-transform">
-        🧑‍🚒
-     </div>
+// --- Components ---
+
+const FiremanCharacter: React.FC<{ active: boolean, onTalk: () => void, quote: string, showQuote: boolean }> = ({ active, onTalk, quote, showQuote }) => {
+  const char = CHARACTERS[0]; // Chief Ramos
+  return (
+    <div className="flex flex-col items-center cursor-pointer transition-all duration-300 relative" onClick={onTalk}>
+      {/* Fixed: Moved chat bubble outside the fireman image container and added z-index fix */}
+      <div className={`absolute -top-12 left-1/2 -translate-x-1/2 z-[100] transition-all duration-300 ${showQuote ? 'opacity-100 scale-100' : 'opacity-0 scale-90 pointer-events-none'}`}>
+        <div className="bg-slate-900 text-white p-4 rounded-2xl text-[11px] font-bold text-center w-60 shadow-2xl relative mb-2">
+          {quote}
+          <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-900 rotate-45"></div>
+        </div>
+      </div>
+      
+      <div className="relative animate-float">
+        <div className="absolute -inset-2 bg-orange-400 rounded-full blur opacity-20 group-hover:opacity-40 transition"></div>
+        <div className="relative bg-white p-5 rounded-full shadow-xl border-4 border-slate-50 flex items-center justify-center text-6xl select-none">
+           {char.emoji}
+        </div>
+        <div className="absolute -top-1 -right-1 bg-rose-500 text-white p-1.5 rounded-full animate-bounce shadow-lg">
+          <MessageCircle size={14} />
+        </div>
+      </div>
+      <div className="mt-4 text-center">
+        <p className="text-[11px] font-black text-slate-500 uppercase tracking-widest bg-slate-100 px-4 py-1.5 rounded-full shadow-sm">{char.name}</p>
+        <p className="text-[9px] font-bold text-slate-300 uppercase mt-1">Chief Safety Bot</p>
+      </div>
+    </div>
+  );
+};
+
+const CharacterCard: React.FC<{ character: Character, onClick?: () => void }> = ({ character, onClick }) => (
+  <div onClick={onClick} className="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4 active:scale-95 transition-all cursor-pointer">
+    <div className={`w-12 h-12 ${character.color} rounded-2xl flex items-center justify-center text-2xl shadow-inner`}>
+      {character.emoji}
+    </div>
+    <div className="flex-1">
+      <h5 className="text-[11px] font-black text-slate-800 uppercase tracking-tight leading-none">{character.name}</h5>
+      <p className="text-[9px] font-bold text-slate-400 uppercase mt-1">{character.role}</p>
+    </div>
   </div>
 );
+
+const DetailedPHMap: React.FC<{ onSelectRegion: (id: string) => void, selectedId: string | null }> = ({ onSelectRegion, selectedId }) => {
+  return (
+    <div className="relative w-full h-full bg-sky-50 rounded-[2rem] overflow-hidden border border-sky-100 shadow-inner flex flex-col">
+      <div className="p-4 pb-2 flex justify-between items-center bg-white/60 backdrop-blur-sm border-b border-sky-100 shrink-0">
+         <h3 className="text-[9px] font-black text-slate-800 uppercase tracking-widest">Digital Hazard Atlas</h3>
+         <div className="flex gap-1">
+            <div className="w-2 h-2 bg-rose-500 rounded-full"></div>
+            <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
+            <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+         </div>
+      </div>
+      <div className="flex-1 overflow-hidden relative p-2 flex items-center justify-center">
+        {/* Scaled for better mobile view */}
+        <svg viewBox="0 0 300 550" className="max-h-full max-w-full drop-shadow-xl overflow-visible">
+           <defs>
+             <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+               <feGaussianBlur in="SourceAlpha" stdDeviation="3" />
+               <feOffset dx="0" dy="2" result="offsetblur" />
+               <feComponentTransfer><feFuncA type="linear" slope="0.2" /></feComponentTransfer>
+               <feMerge>
+                 <feMergeNode /><feMergeNode in="SourceGraphic" />
+               </feMerge>
+             </filter>
+           </defs>
+           
+           {/* Detailed Mapping Shapes */}
+           <path d="M70,30 L90,20 L110,30 L130,50 L140,80 L120,130 L90,140 L70,100 Z" fill="#2ecc71" className="map-path" stroke="#27ae60" strokeWidth="1" onClick={() => onSelectRegion('R1')} />
+           <path d="M100,40 L130,50 L140,90 L120,120 L100,90 Z" fill="#1e8449" className="map-path" stroke="#145a32" strokeWidth="1" onClick={() => onSelectRegion('CAR')} />
+           <path d="M130,50 L180,60 L195,110 L160,145 L130,120 Z" fill="#2ecc71" className="map-path" stroke="#27ae60" strokeWidth="1" onClick={() => onSelectRegion('R2')} />
+           <path d="M90,140 L135,155 L150,190 L120,200 L85,175 Z" fill="#229954" className="map-path" stroke="#196f3d" strokeWidth="1" onClick={() => onSelectRegion('R3')} />
+           <circle cx="115" cy="190" r="10" fill="#e74c3c" className="map-path animate-pulse" onClick={() => onSelectRegion('NCR')} />
+           <path d="M120,200 L165,210 L175,250 L140,270 L110,240 Z" fill="#c0392b" className="map-path" stroke="#922b21" strokeWidth="1" onClick={() => onSelectRegion('R4A')} />
+           <path d="M50,220 L100,240 L105,300 L40,280 Z" fill="#27ae60" className="map-path" stroke="#1e8449" strokeWidth="1" onClick={() => onSelectRegion('R4B')} />
+           <path d="M175,240 L220,260 L205,320 L165,300 Z" fill="#a93226" className="map-path" stroke="#7b241c" strokeWidth="1" onClick={() => onSelectRegion('R5')} />
+           <path d="M90,310 L135,320 L145,370 L105,380 Z" fill="#2ecc71" className="map-path" stroke="#27ae60" strokeWidth="1" onClick={() => onSelectRegion('R6')} />
+           <path d="M145,360 L180,370 L170,410 L135,400 Z" fill="#d35400" className="map-path" stroke="#a04000" strokeWidth="1" onClick={() => onSelectRegion('R7')} />
+           <path d="M185,310 L225,330 L210,390 L175,370 Z" fill="#e67e22" className="map-path" stroke="#d35400" strokeWidth="1" onClick={() => onSelectRegion('R8')} />
+           <path d="M70,420 L130,430 L120,480 L65,470 Z" fill="#27ae60" className="map-path" stroke="#1e8449" strokeWidth="1" onClick={() => onSelectRegion('R9')} />
+           <path d="M140,420 L195,430 L185,470 L135,460 Z" fill="#2ecc71" className="map-path" stroke="#27ae60" strokeWidth="1" onClick={() => onSelectRegion('R10')} />
+           <path d="M210,440 L260,450 L245,520 L200,510 Z" fill="#ba4a00" className="map-path" stroke="#935116" strokeWidth="1" onClick={() => onSelectRegion('R11')} />
+           <path d="M150,470 L210,480 L200,540 L140,530 Z" fill="#28b463" className="map-path" stroke="#1d8348" strokeWidth="1" onClick={() => onSelectRegion('R12')} />
+           <path d="M220,400 L265,410 L255,460 L210,450 Z" fill="#1d8348" className="map-path" stroke="#145a32" strokeWidth="1" onClick={() => onSelectRegion('R13')} />
+           <path d="M125,460 L155,470 L145,510 L115,500 Z" fill="#145a32" className="map-path" stroke="#0b3b17" strokeWidth="1" onClick={() => onSelectRegion('BARMM')} />
+
+           {/* Precision Markers */}
+           {PH_REGIONS.map(r => (
+             <g key={r.id} onClick={() => onSelectRegion(r.id)} className="cursor-pointer">
+               <circle cx={r.coordinates.x} cy={r.coordinates.y} r={selectedId === r.id ? 8 : 4} fill={selectedId === r.id ? '#3b82f6' : '#fff'} stroke="#1e293b" strokeWidth="1" className="transition-all" />
+               {selectedId === r.id && <circle cx={r.coordinates.x} cy={r.coordinates.y} r="12" fill="none" stroke="#3b82f6" strokeWidth="1" className="animate-ping" />}
+             </g>
+           ))}
+        </svg>
+      </div>
+    </div>
+  );
+};
 
 // --- Main App ---
 
@@ -172,623 +195,424 @@ export default function App() {
   const [activeModule, setActiveModule] = useState<DisasterModule | null>(null);
   const [appProgress, setAppProgress] = useState<AppProgress>(loadProgress());
   
+  // UI State
+  const [charQuote, setCharQuote] = useState(CHARACTER_QUOTES['Fireman'][0]);
+  const [showQuote, setShowQuote] = useState(false);
+  const [selectedRegionId, setSelectedRegionId] = useState<string | null>(null);
+  
   // Quiz State
   const [currentQuizIndex, setCurrentQuizIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [showResult, setShowResult] = useState(false);
   const [quizFeedback, setQuizFeedback] = useState<'correct' | 'wrong' | 'timeout' | null>(null);
   const [aiExplanation, setAiExplanation] = useState<string>('');
-  const [loadingAi, setLoadingAi] = useState(false);
-  const [selectedRegionId, setSelectedRegionId] = useState<string | null>(null);
-  const [factIndex, setFactIndex] = useState(0);
-  const [dailyTrivia, setDailyTrivia] = useState<QuizItem | null>(null);
-  const [quizStartTime, setQuizStartTime] = useState(0); 
-
-  // New Quiz Logic State
+  const [isAiLoading, setIsAiLoading] = useState(false);
   const [activeQuestions, setActiveQuestions] = useState<QuizItem[]>([]);
-  const [quizConfig, setQuizConfig] = useState<QuizConfig>({ difficulty: 'Medium', questionCount: 10, timePerQuestion: 20 });
   const [timeLeft, setTimeLeft] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [quizDifficulty, setQuizDifficulty] = useState<DifficultyLevel>('Medium');
   
-  useEffect(() => {
-    saveProgress(appProgress);
-  }, [appProgress]);
+  // Fix: Replaced NodeJS.Timeout with 'any' to avoid the "Namespace 'global.NodeJS' has no exported member 'Timeout'" error.
+  const timerRef = useRef<any>(null);
 
-  // Screen Time Tracker
+  useEffect(() => { saveProgress(appProgress); }, [appProgress]);
+
+  // Global app timer for total seconds played
   useEffect(() => {
     const interval = setInterval(() => {
       setAppProgress(prev => ({
         ...prev,
-        stats: {
-          ...prev.stats,
-          totalSecondsPlayed: prev.stats.totalSecondsPlayed + 1
-        }
+        stats: { ...prev.stats, totalSecondsPlayed: prev.stats.totalSecondsPlayed + 1 }
       }));
     }, 1000);
     return () => clearInterval(interval);
   }, []);
 
-  // Daily Check
+  // Quiz Timer Effect
   useEffect(() => {
-    const today = new Date().toISOString().split('T')[0];
-    if (appProgress.lastLoginDate !== today) {
-        setAppProgress(prev => ({
-          ...prev, 
-          lastLoginDate: today,
-          dailyStreak: prev.dailyStreak + 1
-        }));
-        loadDailyTrivia();
-    }
-  }, []);
-
-  // Timer Logic
-  useEffect(() => {
-    let timer: any;
     if (view === 'quiz' && !isPaused && !showResult && !quizFeedback && timeLeft > 0) {
-      timer = setInterval(() => {
+      timerRef.current = setInterval(() => {
         setTimeLeft(prev => prev - 1);
       }, 1000);
-    } else if (timeLeft === 0 && view === 'quiz' && !quizFeedback && !showResult) {
-      handleAnswer(-1);
+    } else {
+      if (timerRef.current) clearInterval(timerRef.current);
     }
-    return () => clearInterval(timer);
+
+    if (timeLeft === 0 && view === 'quiz' && !quizFeedback && !showResult && !isPaused) {
+      handleAnswer(-1); // Timeout
+    }
+
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [view, isPaused, showResult, quizFeedback, timeLeft]);
 
-  const loadDailyTrivia = async () => {
-      const q = await generateDailyTrivia();
-      if(q) {
-          setDailyTrivia({
-              id: 'daily', 
-              question: q.question, 
-              choices: q.choices, 
-              correctIndex: q.correctIndex, 
-              explanation: q.explanation
-          });
-      }
-  }
-
-  const startModule = (module: DisasterModule) => {
-    setActiveModule(module);
-    setAppProgress(prev => {
-        const newRead = prev.stats.modulesRead.includes(module.id) 
-            ? prev.stats.modulesRead 
-            : [...prev.stats.modulesRead, module.id];
-        return {
-            ...prev,
-            stats: { ...prev.stats, modulesRead: newRead }
-        };
-    });
-    setView('learning');
+  const cycleQuote = () => {
+    const quotes = CHARACTER_QUOTES['Fireman'];
+    setCharQuote(quotes[Math.floor(Math.random() * quotes.length)]);
+    setShowQuote(true);
+    setTimeout(() => setShowQuote(false), 4000);
   };
-
-  const selectDifficulty = () => {
-    setView('difficultySelect');
-  };
-
-  const initQuiz = (difficulty: DifficultyLevel) => {
-    if (!activeModule) return;
-    
-    let config: QuizConfig = { difficulty, questionCount: 10, timePerQuestion: 20 };
-    switch(difficulty) {
-        case 'Easy': config = { difficulty, questionCount: 5, timePerQuestion: 30 }; break;
-        case 'Medium': config = { difficulty, questionCount: 10, timePerQuestion: 20 }; break;
-        case 'Hard': config = { difficulty, questionCount: 15, timePerQuestion: 15 }; break;
-        case 'Intense': config = { difficulty, questionCount: 20, timePerQuestion: 10 }; break;
-        case 'Impossible': config = { difficulty, questionCount: activeModule.quizItems.length, timePerQuestion: 5 }; break;
-    }
-
-    let questions = shuffleArray(activeModule.quizItems);
-    config.questionCount = Math.min(config.questionCount, questions.length);
-    const finalQuestions = questions.slice(0, config.questionCount);
-
-    setQuizConfig(config);
-    setActiveQuestions(finalQuestions);
-    setCurrentQuizIndex(0);
-    setScore(0);
-    setShowResult(false);
-    setQuizFeedback(null);
-    setAiExplanation('');
-    setTimeLeft(config.timePerQuestion);
-    setQuizStartTime(Date.now());
-    setIsPaused(false);
-    setView('quiz');
-  };
-
-  const handlePause = () => setIsPaused(true);
-  const handleResume = () => setIsPaused(false);
-  const handleQuit = () => setView('moduleList');
-  const handleRestart = () => initQuiz(quizConfig.difficulty);
 
   const handleAnswer = async (choiceIndex: number) => {
     if (!activeModule) return;
     const currentQuestion = activeQuestions[currentQuizIndex];
-    const timeTaken = (Date.now() - quizStartTime) / 1000;
-    
-    setAppProgress(prev => ({
-        ...prev,
-        stats: {
-            ...prev.stats,
-            questionsAnswered: prev.stats.questionsAnswered + 1,
-            totalAnswerTime: prev.stats.totalAnswerTime + timeTaken
-        }
-    }));
-
     const isTimeout = choiceIndex === -1;
     const isCorrect = !isTimeout && choiceIndex === currentQuestion.correctIndex;
-
+    
     setQuizFeedback(isTimeout ? 'timeout' : (isCorrect ? 'correct' : 'wrong'));
     
     if (isCorrect) {
       setScore(s => s + 10);
       setAiExplanation(currentQuestion.explanation);
     } else {
-      if (!isTimeout) {
-        setLoadingAi(true);
-        const expl = await generateExplanation(
-          currentQuestion.question, 
-          currentQuestion.choices[currentQuestion.correctIndex], 
-          activeModule.title
-        );
-        setAiExplanation(expl);
-        setLoadingAi(false);
-      } else {
-        setAiExplanation("Time's up! Speed and knowledge are key to survival.");
-      }
+      setIsAiLoading(true);
+      const userChoiceText = isTimeout ? "Ran out of time" : currentQuestion.choices[choiceIndex];
+      const explanation = await generateExplanation(
+        currentQuestion.question,
+        currentQuestion.choices[currentQuestion.correctIndex],
+        `Disaster Study: ${activeModule.type}. The user's answer: "${userChoiceText}". Briefly explain the mistake as a supportive fireman.`
+      );
+      setAiExplanation(explanation);
+      setIsAiLoading(false);
     }
   };
 
-  const nextQuestion = () => {
+  const initQuiz = (difficulty: DifficultyLevel) => {
+    if (!activeModule) return;
+    let questions = shuffleArray(activeModule.quizItems);
+    const countMap = { 'Easy': 5, 'Medium': 8, 'Hard': 12, 'Intense': 15, 'Impossible': 20 };
+    setActiveQuestions(questions.slice(0, countMap[difficulty] || 5));
+    setCurrentQuizIndex(0);
+    setScore(0);
+    setShowResult(false);
     setQuizFeedback(null);
     setAiExplanation('');
-    setQuizStartTime(Date.now());
-    
-    if (currentQuizIndex < activeQuestions.length - 1) {
-      setCurrentQuizIndex(p => p + 1);
-      setTimeLeft(quizConfig.timePerQuestion);
-    } else {
-      finishQuiz();
-    }
-  };
-
-  const finishQuiz = () => {
-    if (!activeModule) return;
-    setShowResult(true);
-    
-    const maxScore = activeQuestions.length * 10;
-    const isWin = score >= (maxScore * 0.6);
-    
-    setAppProgress(prev => {
-      const newCompleted = new Set(prev.completedModules);
-      if (isWin) newCompleted.add(activeModule.id);
-      
-      const newHighScores = { ...prev.highScores };
-      const currentHigh = newHighScores[activeModule.id] || 0;
-      if (score > currentHigh) newHighScores[activeModule.id] = score;
-
-      const newXP = prev.xp + score;
-      
-      return {
-        ...prev,
-        xp: newXP,
-        level: getLevel(newXP),
-        completedModules: Array.from(newCompleted),
-        highScores: newHighScores,
-        stats: {
-            ...prev.stats,
-            quizzesCompleted: prev.stats.quizzesCompleted + 1,
-            quizzesWon: isWin ? prev.stats.quizzesWon + 1 : prev.stats.quizzesWon,
-        }
-      };
-    });
-  };
-
-  const nextFact = () => {
-      setFactIndex(prev => (prev + 1) % RANDOM_FACTS.length);
+    setQuizDifficulty(difficulty);
+    setTimeLeft(getDifficultyTimer(difficulty));
+    setIsPaused(false);
+    setView('quiz');
   };
 
   // --- Views ---
 
   const renderMainMenu = () => (
-    <div className="flex flex-col h-full p-6 space-y-6 animate-fade-in">
-      <header className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">READYPH</h1>
-          <p className="text-sm text-gray-500">Science-based preparedness.</p>
-        </div>
-        <div className="bg-white px-3 py-1 rounded-full border border-gray-200 shadow-sm flex items-center gap-2">
-             <Zap size={14} className="text-yellow-500" />
-             <span className="text-sm font-bold text-gray-700">LVL {appProgress.level} • {appProgress.xp} XP</span>
+    <div className="flex flex-col h-full p-6 space-y-6 animate-fade-in no-scrollbar overflow-y-auto pb-32">
+      <header className="flex justify-between items-center shrink-0">
+        <h1 className="text-3xl animate-logo">READYPH</h1>
+        <div className="bg-white px-3 py-1.5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-2">
+             <div className="w-7 h-7 bg-amber-100 rounded-full flex items-center justify-center text-amber-600 font-black text-[10px]">L{appProgress.level}</div>
+             <span className="text-[10px] font-black text-slate-800 uppercase tracking-widest">{appProgress.xp} XP</span>
         </div>
       </header>
 
-      <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
-        <div className="relative z-10">
-          <h2 className="text-lg font-bold mb-2">Daily Trivia</h2>
-          <p className="text-indigo-100 text-sm mb-4">Keep your {appProgress.dailyStreak} day streak alive!</p>
-          <button 
-            onClick={() => {
-                if(dailyTrivia) {
-                    const tempModule: DisasterModule = {
-                        id: 'daily',
-                        type: DisasterType.Earthquake,
-                        title: 'Daily Trivia',
-                        description: 'Daily Challenge',
-                        learningContent: 'Quick test!',
-                        icon: '📅',
-                        color: 'bg-purple-500',
-                        quizItems: [dailyTrivia]
-                    }
-                    setActiveModule(tempModule);
-                    setActiveQuestions([dailyTrivia]);
-                    setQuizConfig({ difficulty: 'Medium', questionCount: 1, timePerQuestion: 30 });
-                    setCurrentQuizIndex(0);
-                    setScore(0);
-                    setShowResult(false);
-                    setQuizFeedback(null);
-                    setAiExplanation('');
-                    setTimeLeft(30);
-                    setQuizStartTime(Date.now());
-                    setIsPaused(false);
-                    setView('quiz');
-                } else {
-                   loadDailyTrivia().then(() => alert("Trivia loaded! Click again."));
-                }
-            }}
-            className="bg-white text-indigo-600 px-4 py-2 rounded-lg font-semibold text-sm hover:bg-indigo-50 active:scale-95 transition-transform"
-          >
-            {dailyTrivia ? "Play Now" : "Loading Trivia..."}
-          </button>
-        </div>
-        <Brain className="absolute -bottom-4 -right-4 text-white opacity-20 w-32 h-32" />
+      {/* FIREMAN INTERACTIVE BOX */}
+      <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 flex flex-col items-center relative group shrink-0">
+        <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-orange-500 to-rose-600 rounded-t-[2.5rem]"></div>
+        <FiremanCharacter 
+          active={showQuote} 
+          onTalk={cycleQuote} 
+          quote={charQuote} 
+          showQuote={showQuote}
+        />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <button 
-          onClick={() => setView('moduleList')}
-          className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col items-center justify-center gap-3 hover:shadow-md transition-shadow"
-        >
-          <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
-            <BookOpen size={24} />
-          </div>
-          <span className="font-semibold text-gray-700">Learning</span>
+      <div className="grid grid-cols-2 gap-4 shrink-0">
+        <button onClick={() => setView('moduleList')} className="bg-indigo-600 p-8 rounded-[2rem] shadow-lg text-white flex flex-col items-center justify-center gap-3 active:scale-95 transition-all">
+          <BookOpen size={32} />
+          <span className="font-black text-[10px] uppercase tracking-widest">Training</span>
         </button>
-
-        <button 
-          onClick={() => setView('map')}
-          className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col items-center justify-center gap-3 hover:shadow-md transition-shadow"
-        >
-          <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-600">
-            <MapIcon size={24} />
-          </div>
-          <span className="font-semibold text-gray-700">Hazard Map</span>
+        <button onClick={() => setView('map')} className="bg-emerald-600 p-8 rounded-[2rem] shadow-lg text-white flex flex-col items-center justify-center gap-3 active:scale-95 transition-all">
+          <MapIcon size={32} />
+          <span className="font-black text-[10px] uppercase tracking-widest">Atlas</span>
         </button>
       </div>
 
-      {/* Stats Summary Panel */}
-      <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex-1 overflow-hidden flex flex-col">
-          <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-              <Trophy size={16} className="text-yellow-500" />
-              Game Statistics
-          </h3>
-          <div className="grid grid-cols-2 gap-3 overflow-y-auto no-scrollbar">
-              <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
-                  <span className="text-[10px] text-gray-500 block uppercase font-bold mb-1">Modules Won</span>
-                  <span className="text-xl font-bold">{appProgress.stats.quizzesWon}</span>
-              </div>
-              <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
-                  <span className="text-[10px] text-gray-500 block uppercase font-bold mb-1">Time Played</span>
-                  <span className="text-xl font-bold">{(appProgress.stats.totalSecondsPlayed / 60).toFixed(0)}m</span>
-              </div>
-              <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
-                  <span className="text-[10px] text-gray-500 block uppercase font-bold mb-1">Avg Speed</span>
-                  <span className="text-xl font-bold">{appProgress.stats.questionsAnswered > 0 ? (appProgress.stats.totalAnswerTime / appProgress.stats.questionsAnswered).toFixed(1) : 0}s</span>
-              </div>
-              <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
-                  <span className="text-[10px] text-gray-500 block uppercase font-bold mb-1">Streak</span>
-                  <span className="text-xl font-bold flex items-center gap-1">{appProgress.dailyStreak} <Flame size={14} className="text-orange-500" /></span>
-              </div>
-          </div>
+      <div className="bg-slate-900 rounded-[2rem] p-6 text-white relative overflow-hidden shrink-0">
+         <div className="flex items-center gap-3 mb-3">
+            <AlertTriangle size={16} className="text-amber-400" />
+            <h3 className="text-[9px] font-black uppercase tracking-widest text-amber-400">Readiness Pulse</h3>
+         </div>
+         <p className="text-[12px] font-bold text-slate-300 leading-relaxed z-10">
+           {RANDOM_FACTS[appProgress.level % RANDOM_FACTS.length]}
+         </p>
       </div>
     </div>
   );
 
+  const renderMap = () => {
+    const region = selectedRegionId ? PH_REGIONS.find(r => r.id === selectedRegionId) : null;
+    return (
+      <div className="flex flex-col h-full bg-slate-50 animate-fade-in">
+         <header className="p-4 flex items-center gap-4 border-b bg-white shrink-0">
+            <button onClick={() => setView('menu')} className="p-2 bg-slate-50 rounded-xl"><ChevronLeft size={20}/></button>
+            <h2 className="text-xl font-black tracking-tighter">Philippine Atlas</h2>
+         </header>
+
+         <div className="flex-1 overflow-hidden flex flex-col">
+            <div className="h-[55%] p-4">
+              <DetailedPHMap onSelectRegion={setSelectedRegionId} selectedId={selectedRegionId} />
+            </div>
+            
+            <div className="h-[45%] overflow-y-auto no-scrollbar p-4 pt-0">
+              {region ? (
+                <div className="animate-slide-up space-y-4 pb-8">
+                   <div className="p-6 rounded-[2rem] text-white shadow-xl relative overflow-hidden" style={{ backgroundColor: region.color }}>
+                      <div className="flex justify-between items-start mb-4">
+                         <div>
+                            <h4 className="text-2xl font-black tracking-tighter leading-none">{region.name}</h4>
+                            <span className="text-[9px] font-black uppercase tracking-widest opacity-60 mt-1 block">{region.islandGroup}</span>
+                         </div>
+                         <div className="bg-white/20 px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest">
+                            {region.riskLevel} Risk
+                         </div>
+                      </div>
+                      <p className="text-[12px] font-bold leading-relaxed mb-4 opacity-90">{region.info}</p>
+                      <div className="flex flex-wrap gap-2">
+                         {region.commonHazards.map(h => (
+                           <div key={h} className="bg-white/10 p-1.5 px-3 rounded-full flex items-center gap-1.5 border border-white/5">
+                              <ShieldAlert size={10} className="text-white" />
+                              <span className="text-[8px] font-black uppercase tracking-widest">{h}</span>
+                           </div>
+                         ))}
+                      </div>
+                   </div>
+
+                   <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+                      <h5 className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                         <Info size={12} /> Detailed Diagnostics
+                      </h5>
+                      <ul className="space-y-3">
+                         {region.details.map((d, i) => (
+                           <li key={i} className="flex gap-3 text-[11px] font-bold text-slate-600 leading-tight">
+                              <span className="text-emerald-500">•</span> {d}
+                           </li>
+                         ))}
+                      </ul>
+                   </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center text-center p-8 bg-white rounded-[2rem] border border-slate-100 h-full justify-center">
+                   <Search size={40} className="text-slate-100 mb-4" />
+                   <h4 className="text-sm font-black text-slate-800 mb-1 uppercase tracking-tight">Interactive Atlas</h4>
+                   <p className="text-[10px] font-bold text-slate-400 leading-relaxed uppercase">Select a region marker on the map.</p>
+                </div>
+              )}
+            </div>
+         </div>
+      </div>
+    );
+  };
+
   const renderModuleList = () => (
-    <div className="p-4 space-y-4 pb-20">
-        <div className="flex items-center gap-2 mb-4">
-            <button onClick={() => setView('menu')} className="p-2 hover:bg-gray-200 rounded-full"><ChevronLeft /></button>
-            <h2 className="text-xl font-bold">Science Modules</h2>
+    <div className="flex flex-col h-full bg-slate-50 animate-fade-in">
+        <header className="p-6 flex items-center gap-4 border-b bg-white shrink-0">
+            <button onClick={() => setView('menu')} className="p-3 bg-slate-50 rounded-2xl"><ChevronLeft size={20}/></button>
+            <h2 className="text-2xl font-black tracking-tighter">Calamity Files</h2>
+        </header>
+        <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-4 pb-32">
+          {MODULES.map(m => (
+            <div key={m.id} onClick={() => { setActiveModule(m); setView('learning'); }} className="bg-white p-5 rounded-[1.5rem] shadow-sm border border-slate-100 flex items-center gap-5 cursor-pointer active:scale-95 transition-all group">
+              <div className={`w-14 h-14 ${m.color} rounded-2xl flex items-center justify-center text-3xl shadow-inner`}>{m.icon}</div>
+              <div className="flex-1">
+                <h3 className="font-black text-slate-800 text-sm tracking-tight leading-none">{m.title}</h3>
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1.5">Study Drill Available</p>
+              </div>
+              <div className="text-slate-200"><ChevronLeft className="rotate-180" size={16} /></div>
+            </div>
+          ))}
         </div>
-      {MODULES.map(module => (
-        <div 
-          key={module.id}
-          onClick={() => startModule(module)}
-          className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow-md transition-all cursor-pointer"
-        >
-          <div className={`w-14 h-14 ${module.color} rounded-lg flex items-center justify-center text-2xl shadow-inner shrink-0`}>
-            {module.icon}
-          </div>
-          <div className="flex-1">
-            <h3 className="font-bold text-gray-800">{module.title}</h3>
-            <p className="text-xs text-gray-500 line-clamp-1">{module.description}</p>
-          </div>
-          <div className="text-gray-400">
-            <ChevronLeft className="rotate-180" size={18} />
-          </div>
-        </div>
-      ))}
     </div>
   );
 
   const renderLearning = () => {
     if (!activeModule) return null;
+    const borderClass = getModuleBorderClass(activeModule.type);
     return (
-      <div className="flex flex-col h-full bg-white">
-        <div className={`p-6 ${activeModule.color} text-white`}>
-           <button onClick={() => setView('moduleList')} className="mb-4 p-1 hover:bg-white/20 rounded-full"><ChevronLeft /></button>
-           <h1 className="text-2xl font-bold flex items-center gap-2">
-             {activeModule.icon} {activeModule.title}
-           </h1>
+      <div className="flex flex-col h-full bg-white animate-fade-in relative">
+        <div className={`p-8 ${activeModule.color} text-white shrink-0 rounded-b-[2rem] shadow-lg`}>
+           <button onClick={() => setView('moduleList')} className="mb-6 p-3 bg-white/20 rounded-2xl backdrop-blur-md"><ChevronLeft size={20}/></button>
+           <div className="flex items-center gap-5">
+              <div className="text-6xl drop-shadow-lg">{activeModule.icon}</div>
+              <h1 className="text-2xl font-black tracking-tighter leading-tight">{activeModule.title}</h1>
+           </div>
         </div>
-        <div className="p-6 flex-1 overflow-y-auto">
-            <div className="prose prose-sm max-w-none text-gray-700">
-                {activeModule.learningContent.split('\n').map((line, i) => {
-                    if (line.startsWith('###')) return <h3 key={i} className="text-lg font-bold text-gray-900 mt-6 mb-3 border-b pb-1 border-gray-100">{line.replace('###', '')}</h3>
-                    if (line.startsWith('•')) return <li key={i} className="ml-4 mb-2 list-disc pl-1">{line.replace('•', '').replace('**', '').replace('**', ': ')}</li>
-                    if (line.startsWith('*')) return <li key={i} className="ml-4 mb-2 list-disc pl-1">{line.replace('*', '')}</li>
-                    if (line.trim() === '') return <br key={i}/>
-                    return <p key={i} className="mb-3 leading-relaxed">{line}</p>
-                })}
+        <div className="flex-1 overflow-y-auto no-scrollbar p-6 pb-24">
+            <div className={`p-6 bg-white ${borderClass} mb-8`}>
+                <div className="space-y-8">
+                    {activeModule.learningContent.split('###').map((section, i) => {
+                        if (!section.trim()) return null;
+                        const lines = section.trim().split('\n');
+                        const title = lines[0];
+                        const content = lines.slice(1);
+                        return (
+                          <div key={i} className="animate-slide-up">
+                            <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                               <ShieldAlert size={14} className="text-rose-500" /> {title}
+                            </h4>
+                            <div className="text-[13px] font-bold text-slate-700 leading-relaxed space-y-2">
+                                {content.map((l, j) => (
+                                  <div key={j} className="bg-slate-50/50 p-3 rounded-xl border-l-4 border-slate-200">
+                                    {l.replace('•', '').trim()}
+                                  </div>
+                                ))}
+                            </div>
+                          </div>
+                        );
+                    })}
+                </div>
             </div>
-            <div className="h-20"></div>
         </div>
-        <div className="p-4 border-t bg-white absolute bottom-0 w-full">
-          <button 
-            onClick={selectDifficulty}
-            className={`w-full ${activeModule.color} text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:brightness-110 active:scale-95 transition-all`}
-          >
-            Start Quiz
-          </button>
+        <div className="absolute bottom-0 w-full p-6 bg-gradient-to-t from-white via-white to-transparent pt-10">
+            <button onClick={() => setView('difficultySelect')} className={`w-full ${activeModule.color} text-white py-5 rounded-[1.5rem] font-black text-[11px] uppercase tracking-widest shadow-xl active:scale-95 transition-transform`}>Initiate Quiz Simulation</button>
         </div>
       </div>
     );
   };
 
-  const renderDifficultySelect = () => {
-    const difficulties: {level: DifficultyLevel, color: string, desc: string, time: string}[] = [
-        { level: 'Easy', color: 'bg-green-100 text-green-700 border-green-200', desc: 'Relaxed pace.', time: '30s' },
-        { level: 'Medium', color: 'bg-blue-100 text-blue-700 border-blue-200', desc: 'Standard challenge.', time: '20s' },
-        { level: 'Hard', color: 'bg-orange-100 text-orange-700 border-orange-200', desc: 'Fast timer.', time: '15s' },
-        { level: 'Intense', color: 'bg-red-100 text-red-700 border-red-200', desc: 'Rapid fire.', time: '10s' },
-        { level: 'Impossible', color: 'bg-purple-900 text-white border-purple-950', desc: 'Master level.', time: '5s' },
-    ];
-
-    return (
-        <div className="flex flex-col h-full bg-white p-6">
-            <div className="flex items-center gap-2 mb-6">
-                <button onClick={() => setView('learning')} className="p-2 hover:bg-gray-100 rounded-full"><ChevronLeft /></button>
-                <h2 className="text-xl font-bold">Select Difficulty</h2>
-            </div>
-            <div className="space-y-4 flex-1 overflow-y-auto no-scrollbar">
-                {difficulties.map((d) => (
-                    <button 
-                        key={d.level}
-                        onClick={() => initQuiz(d.level)}
-                        className={`w-full p-4 rounded-xl border-2 flex flex-col items-start gap-1 transition-transform active:scale-[0.98] ${d.color}`}
-                    >
-                        <div className="flex justify-between w-full items-center">
-                            <span className="font-bold text-lg">{d.level}</span>
-                            <span className="text-xs font-mono bg-white/30 px-2 py-1 rounded">{d.time} / q</span>
-                        </div>
-                        <p className="text-sm opacity-90">{d.desc}</p>
-                    </button>
-                ))}
-            </div>
+  const renderDifficultySelect = () => (
+    <div className="flex flex-col h-full bg-slate-50 p-8 animate-fade-in">
+        <button onClick={() => setView('learning')} className="mb-10 p-3 bg-white rounded-2xl self-start shadow-sm"><ChevronLeft size={20}/></button>
+        <h2 className="text-4xl font-black tracking-tighter mb-2">Set Simulation</h2>
+        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-10">Timer decreases as difficulty rises.</p>
+        <div className="space-y-3 overflow-y-auto no-scrollbar pb-10">
+            {(['Easy', 'Medium', 'Hard', 'Intense', 'Impossible'] as DifficultyLevel[]).map(d => {
+              const seconds = getDifficultyTimer(d);
+              return (
+                <button key={d} onClick={() => initQuiz(d)} className="w-full bg-white p-5 rounded-[1.5rem] border-2 border-slate-100 flex items-center justify-between group active:scale-95 transition-all hover:border-indigo-500 shadow-sm">
+                    <div className="text-left">
+                      <span className="font-black text-[12px] uppercase tracking-widest text-slate-800 block">{d}</span>
+                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Timer: {seconds}s per item</span>
+                    </div>
+                    <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                        <ChevronLeft className="rotate-180" size={16} />
+                    </div>
+                </button>
+              );
+            })}
         </div>
-    );
-  };
+    </div>
+  );
 
   const renderQuiz = () => {
-    if (!activeModule) return null;
-    
+    if (!activeModule || !activeQuestions[currentQuizIndex]) return null;
     if (showResult) {
-      const maxScore = activeQuestions.length * 10;
-      const percentage = (score / maxScore) * 100;
-      const passed = percentage >= 60;
-
-      return (
-        <div className="flex flex-col h-full items-center justify-center p-8 text-center animate-fade-in bg-white">
-          <div className={`w-24 h-24 rounded-full flex items-center justify-center mb-6 ${passed ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
-            {passed ? <Trophy size={48} /> : <AlertTriangle size={48} />}
-          </div>
-          <h2 className="text-3xl font-bold text-gray-800 mb-2">{passed ? 'Success!' : 'Study More'}</h2>
-          <p className="text-gray-500 mb-2">You earned {score} XP</p>
-          <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase mb-8 bg-gray-100 text-gray-600`}>{quizConfig.difficulty} Mode</span>
-          
-          <div className="w-full space-y-3">
-            <button 
-              onClick={() => setView('menu')}
-              className="w-full bg-gray-100 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-200"
-            >
-              Back Home
-            </button>
-            <button 
-              onClick={() => initQuiz(quizConfig.difficulty)}
-              className={`w-full ${activeModule.color} text-white py-3 rounded-xl font-semibold shadow-md`}
-            >
-              Retry Quiz
-            </button>
-          </div>
-        </div>
-      );
+       return (
+         <div className="h-full flex flex-col items-center justify-center p-8 text-center bg-white animate-fade-in">
+            <div className="w-48 h-48 bg-emerald-50 rounded-[3rem] flex items-center justify-center text-7xl mb-10 shadow-inner">🏆</div>
+            <h2 className="text-4xl font-black tracking-tighter mb-4">Mission Success</h2>
+            <div className="bg-slate-50 p-8 rounded-[2rem] w-full mb-10 border border-slate-100">
+               <span className="text-6xl font-black text-indigo-600 tracking-tighter">{score} XP</span>
+            </div>
+            <button onClick={() => setView('menu')} className="w-full bg-slate-900 text-white py-6 rounded-[1.5rem] font-black text-[12px] uppercase tracking-widest shadow-xl">Complete debriefing</button>
+         </div>
+       );
     }
 
-    const currentQ = activeQuestions[currentQuizIndex];
-    const timerPercent = (timeLeft / quizConfig.timePerQuestion) * 100;
-    const timerColor = timerPercent > 50 ? 'bg-green-500' : timerPercent > 20 ? 'bg-yellow-500' : 'bg-red-500';
+    const q = activeQuestions[currentQuizIndex];
+    const progress = ((currentQuizIndex + 1) / activeQuestions.length) * 100;
 
     return (
-      <div className="flex flex-col h-full bg-gray-50 relative overflow-hidden">
-        {isPaused && (
-            <div className="absolute inset-0 z-50 backdrop-blur-md bg-white/30 flex flex-col items-center justify-center p-8 animate-fade-in">
-                <h2 className="text-4xl font-bold text-gray-800 mb-8">PAUSED</h2>
-                <div className="flex flex-col w-full gap-4 max-w-xs">
-                    <button onClick={handleResume} className="bg-blue-600 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2"><Play size={20}/> Resume</button>
-                    <button onClick={handleQuit} className="bg-gray-500 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2"><LogOut size={20}/> Quit</button>
-                </div>
-            </div>
-        )}
-        
-        <div className={`p-6 bg-white shadow-sm z-10 transition-all ${isPaused ? 'blur-sm' : ''}`}>
-          <div className="flex justify-between items-center mb-4">
-             <button onClick={handlePause} className="p-2 bg-gray-100 rounded-full hover:bg-gray-200"><Pause size={16}/></button>
-             <div className="flex items-center gap-2">
-                 <span className="text-xs font-bold px-2 py-1 bg-gray-100 rounded uppercase">{quizConfig.difficulty}</span>
-                 <span className="text-sm font-bold text-blue-600">{score} XP</span>
-             </div>
-          </div>
-          
-          <div className="flex gap-2 mb-2 items-center">
-             <div className="flex-1 bg-gray-200 rounded-full h-2">
-                 <div className="bg-blue-600 h-2 rounded-full transition-all" style={{ width: `${((currentQuizIndex + 1) / activeQuestions.length) * 100}%` }}></div>
-             </div>
-             <span className="text-xs font-mono text-gray-500">{currentQuizIndex + 1}/{activeQuestions.length}</span>
-          </div>
-
-          <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
-             <div className={`h-full ${timerColor} transition-all duration-1000 ease-linear`} style={{ width: `${timerPercent}%` }}></div>
-          </div>
-          
-          <h2 className="text-xl font-bold text-gray-800 leading-tight mt-4 min-h-[3.5rem]">{currentQ.question}</h2>
-        </div>
-
-        <div className={`flex-1 p-6 overflow-y-auto space-y-3 transition-all ${isPaused ? 'blur-sm' : ''}`}>
-          {currentQ.choices.map((choice, idx) => {
-            let btnClass = "w-full p-4 rounded-xl text-left border-2 transition-all font-medium text-gray-700 ";
-            if (quizFeedback) {
-              if (idx === currentQ.correctIndex) btnClass += "bg-green-100 border-green-500 text-green-800 ";
-              else if (idx !== currentQ.correctIndex && quizFeedback === 'wrong') btnClass += "opacity-50 border-transparent bg-white ";
-              else btnClass += "bg-white border-transparent shadow-sm ";
-            } else {
-              btnClass += "bg-white border-transparent shadow-sm hover:border-blue-300 active:scale-[0.99] ";
-            }
-
-            return (
-              <button
-                key={idx}
-                disabled={!!quizFeedback}
-                onClick={() => handleAnswer(idx)}
-                className={btnClass}
-              >
-                {choice}
-              </button>
-            );
-          })}
-
-          {quizFeedback && (
-            <div className="mt-6 animate-fade-in pb-20">
-              <div className={`p-4 rounded-xl border-l-4 shadow-sm ${quizFeedback === 'correct' ? 'bg-green-50 text-green-800 border-green-500' : 'bg-red-50 text-red-800 border-red-500'}`}>
-                <div className="flex items-center gap-2 font-bold mb-2 text-lg">
-                  {quizFeedback === 'correct' ? <CheckCircle size={24} /> : (quizFeedback === 'timeout' ? <Timer size={24} /> : <XCircle size={24} />)}
-                  {quizFeedback === 'correct' ? 'Correct!' : (quizFeedback === 'timeout' ? 'Time Up!' : 'Wrong Answer')}
-                </div>
-                
-                <div className="bg-white/60 p-3 rounded-lg text-sm leading-relaxed mb-2">
-                    <span className="font-bold block mb-1">Explanation:</span>
-                    {loadingAi ? "Loading AI analysis..." : aiExplanation}
-                </div>
+      <div className="flex flex-col h-full bg-white relative">
+        <header className="p-6 border-b shrink-0 bg-white z-10">
+           <div className="flex justify-between items-center mb-6">
+              <button onClick={() => setIsPaused(true)} className="p-2 bg-slate-100 rounded-lg text-slate-600"><Pause size={18}/></button>
+              <div className="flex items-center gap-4">
+                 <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase ${timeLeft <= 5 ? 'bg-rose-100 text-rose-600 animate-pulse' : 'bg-slate-100 text-slate-600'}`}>
+                    <Clock size={12} /> {timeLeft}s
+                 </div>
+                 <div className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase">
+                    {currentQuizIndex + 1}/{activeQuestions.length}
+                 </div>
               </div>
-              <button 
-                onClick={nextQuestion}
-                className="w-full mt-4 bg-blue-600 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-blue-700 active:scale-95 transition-all"
-              >
-                {currentQuizIndex === activeQuestions.length - 1 ? "Finish Quiz" : "Next Question"}
-              </button>
-            </div>
-          )}
+           </div>
+           <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+             <div className="h-full bg-indigo-600 transition-all duration-500" style={{ width: `${progress}%` }}></div>
+           </div>
+           <h2 className="text-[17px] font-black text-slate-800 leading-snug mt-6 min-h-[4rem]">{q.question}</h2>
+        </header>
+
+        <div className="flex-1 p-6 space-y-3 overflow-y-auto no-scrollbar pb-32">
+           {q.choices.map((choice, idx) => {
+              const isSelected = quizFeedback && idx === q.correctIndex;
+              let choiceClass = "w-full p-5 rounded-[1.2rem] text-left border-2 transition-all font-black text-[12px] uppercase tracking-tight flex items-center justify-between ";
+              if (quizFeedback) {
+                  if (idx === q.correctIndex) choiceClass += "bg-emerald-50 border-emerald-500 text-emerald-800 scale-[1.02] ";
+                  else choiceClass += "opacity-40 border-slate-100 bg-white ";
+              } else {
+                  choiceClass += "bg-white border-transparent shadow-sm active:scale-[0.98] ";
+              }
+              return (
+                <button key={idx} disabled={!!quizFeedback || isPaused} onClick={() => handleAnswer(idx)} className={choiceClass}>
+                  <span>{choice}</span>
+                  {isSelected && <CheckCircle className="text-emerald-500" size={18} />}
+                </button>
+              );
+           })}
+
+           {quizFeedback && (
+             <div className="mt-6 animate-slide-up pb-20">
+                <div className="p-6 rounded-[2rem] bg-slate-900 text-white shadow-xl relative border-t-4 border-amber-500">
+                  <div className="flex items-center gap-2 font-black mb-4 text-[9px] uppercase tracking-widest text-amber-400">
+                    {isAiLoading ? <Loader2 className="animate-spin" size={14} /> : <Brain size={14} />} 
+                    AI Protocol Briefing
+                  </div>
+                  <div className="text-[13px] font-bold leading-relaxed text-slate-200">
+                    {isAiLoading ? "Consulting HQ database..." : aiExplanation}
+                  </div>
+                  {!isAiLoading && (
+                    <button onClick={() => { 
+                      setQuizFeedback(null); 
+                      if (currentQuizIndex < activeQuestions.length - 1) {
+                        setCurrentQuizIndex(prev => prev + 1);
+                        setTimeLeft(getDifficultyTimer(quizDifficulty));
+                      } else {
+                        setShowResult(true);
+                      }
+                    }} className="w-full mt-6 bg-white text-slate-900 py-4 rounded-[1.2rem] font-black text-[11px] uppercase tracking-widest shadow-lg">Proceed</button>
+                  )}
+                </div>
+             </div>
+           )}
         </div>
+
+        {/* Pause Overlay */}
+        {isPaused && (
+          <div className="absolute inset-0 bg-white/95 backdrop-blur-md z-[100] flex flex-col items-center justify-center p-10 text-center animate-fade-in">
+             <div className="w-24 h-24 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mb-6">
+                <Pause size={48} />
+             </div>
+             <h3 className="text-3xl font-black tracking-tighter mb-2 uppercase italic text-slate-800">Simulation Paused</h3>
+             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-10">Hazard assessment temporarily suspended.</p>
+             <div className="w-full space-y-4">
+                <button onClick={() => setIsPaused(false)} className="w-full bg-indigo-600 text-white py-5 rounded-[1.5rem] font-black text-[12px] uppercase tracking-widest shadow-xl flex items-center justify-center gap-3">
+                   <Play size={18} fill="currentColor" /> Resume Drill
+                </button>
+                <button onClick={() => setView('difficultySelect')} className="w-full bg-slate-100 text-slate-500 py-5 rounded-[1.5rem] font-black text-[12px] uppercase tracking-widest flex items-center justify-center gap-3">
+                   <RotateCcw size={18} /> Abort & Restart
+                </button>
+             </div>
+          </div>
+        )}
       </div>
     );
   };
 
-  const renderMap = () => {
-      const regionInfo = selectedRegionId ? PH_REGIONS.find(r => r.id === selectedRegionId) : null;
-
-      return (
-    <div className="flex flex-col h-full bg-blue-50 animate-fade-in relative overflow-hidden">
-      <div className="p-4 border-b flex items-center gap-2 z-10 bg-white/90 backdrop-blur-sm shadow-sm absolute w-full top-0">
-         <button onClick={() => setView('menu')} className="p-2 hover:bg-gray-100 rounded-full"><ChevronLeft /></button>
-         <div>
-            <h2 className="text-xl font-bold leading-none">Hazard Map</h2>
-            <p className="text-xs text-gray-500">Tap regions for regional analysis</p>
-         </div>
-      </div>
-      
-      <div className="flex-1 relative flex items-center justify-center p-4 bg-gradient-to-b from-blue-200 to-blue-300" style={{ perspective: '1000px' }}>
-        <div style={{ transform: 'rotateX(25deg) scale(0.9)', transformStyle: 'preserve-3d', transition: 'transform 0.5s' }}>
-            <PhilippinesMap onSelectRegion={setSelectedRegionId} selectedRegionId={selectedRegionId} />
-        </div>
-        <GuideCharacter onClick={nextFact} message={RANDOM_FACTS[factIndex]} />
-      </div>
-
-      <div className="max-h-[40%] overflow-y-auto p-6 bg-white border-t rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] z-20 relative no-scrollbar">
-             {regionInfo ? (
-                 <div className="animate-slide-up pb-10">
-                     <div className="flex justify-between items-start mb-4">
-                         <h3 className="text-2xl font-bold text-gray-800 w-3/4">{regionInfo.name}</h3>
-                         <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${regionInfo.riskLevel === 'High' ? 'bg-red-100 text-red-600' : 'bg-yellow-100 text-yellow-600'}`}>
-                            {regionInfo.riskLevel} Risk
-                         </span>
-                     </div>
-                     
-                     <div className="mb-4">
-                        <div className="flex flex-wrap gap-2 mb-4">
-                            {regionInfo.commonHazards.map(h => (
-                                <span key={h} className="bg-gray-50 text-gray-600 px-2 py-1 rounded-md text-[10px] font-bold border border-gray-200 uppercase tracking-wide">
-                                    {getHazardIcon(h)} {h}
-                                </span>
-                            ))}
-                        </div>
-                     </div>
-                     
-                     <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 text-blue-900 text-sm leading-relaxed flex gap-3">
-                        <AlertTriangle className="shrink-0 mt-1 text-blue-500" size={18} />
-                        <div>
-                            {regionInfo.info.split('\n').map((line, i) => (
-                                <p key={i} className="mb-2">{line.replace('•', '').trim()}</p>
-                            ))}
-                        </div>
-                     </div>
-                 </div>
-             ) : (
-                 <div className="flex flex-col items-center justify-center h-full text-gray-400 text-center pb-6">
-                     <MapIcon size={48} className="mb-2 opacity-20"/>
-                     <p className="text-sm">Select a region to view<br/>specific hazard data.</p>
-                 </div>
-             )}
-      </div>
-    </div>
-  )};
-
   const BottomNav = () => (
-    <div className="bg-white border-t border-gray-200 flex justify-around items-center p-2 pb-safe absolute bottom-0 w-full z-20">
-      <button onClick={() => setView('menu')} className={`p-2 rounded-xl flex flex-col items-center gap-1 ${view === 'menu' ? 'text-blue-600' : 'text-gray-400'}`}>
-        <Home size={22} />
-        <span className="text-[10px] font-medium">Home</span>
+    <div className="bg-white/95 backdrop-blur-2xl border-t border-slate-100 flex justify-around items-center p-4 pb-8 absolute bottom-0 w-full z-40 rounded-t-[2.5rem] shadow-2xl shrink-0">
+      <button onClick={() => setView('menu')} className={`p-3 rounded-2xl flex flex-col items-center gap-1 transition-all ${view === 'menu' ? 'text-indigo-600 bg-indigo-50 scale-105' : 'text-slate-400'}`}>
+        <Home size={22} /><span className="text-[8px] font-black uppercase tracking-widest">Base</span>
       </button>
-      <button onClick={() => setView('moduleList')} className={`p-2 rounded-xl flex flex-col items-center gap-1 ${['moduleList','learning','difficultySelect', 'quiz'].includes(view) ? 'text-blue-600' : 'text-gray-400'}`}>
-        <BookOpen size={22} />
-        <span className="text-[10px] font-medium">Learn</span>
+      <button onClick={() => setView('moduleList')} className={`p-3 rounded-2xl flex flex-col items-center gap-1 transition-all ${['moduleList','learning','difficultySelect', 'quiz'].includes(view) ? 'text-indigo-600 bg-indigo-50 scale-105' : 'text-slate-400'}`}>
+        <BookOpen size={22} /><span className="text-[8px] font-black uppercase tracking-widest">Learn</span>
       </button>
-      <button onClick={() => setView('map')} className={`p-2 rounded-xl flex flex-col items-center gap-1 ${view === 'map' ? 'text-blue-600' : 'text-gray-400'}`}>
-        <MapIcon size={22} />
-        <span className="text-[10px] font-medium">Map</span>
+      <button onClick={() => setView('map')} className={`p-3 rounded-2xl flex flex-col items-center gap-1 transition-all ${view === 'map' ? 'text-indigo-600 bg-indigo-50 scale-105' : 'text-slate-400'}`}>
+        <MapIcon size={22} /><span className="text-[8px] font-black uppercase tracking-widest">Atlas</span>
       </button>
     </div>
   );
 
   return (
-    <div className="h-screen w-full max-w-md mx-auto bg-gray-50 shadow-2xl overflow-hidden relative font-sans text-gray-900 flex flex-col">
-      <div className="flex-1 overflow-y-auto no-scrollbar relative flex flex-col">
+    <div className="h-full w-full max-w-md mx-auto bg-slate-50 shadow-2xl overflow-hidden relative font-sans text-slate-900 flex flex-col antialiased">
+      <div className="flex-1 overflow-hidden relative flex flex-col">
         {view === 'menu' && renderMainMenu()}
         {view === 'moduleList' && renderModuleList()}
         {view === 'learning' && renderLearning()}
@@ -796,7 +620,6 @@ export default function App() {
         {view === 'quiz' && renderQuiz()}
         {view === 'map' && renderMap()}
       </div>
-
       {view !== 'quiz' && view !== 'learning' && view !== 'difficultySelect' && <BottomNav />}
     </div>
   );

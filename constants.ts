@@ -1,441 +1,207 @@
-import { DisasterModule, DisasterType, RegionData } from './types';
+import { DisasterModule, DisasterType, RegionData, Character } from './types';
+
+export const DATA_SOURCES = "Authored by READYPH Safety Board & National Authorities (2025)";
 
 export const RANDOM_FACTS = [
-    "The Philippines sits on the 'Pacific Ring of Fire', home to 75% of the world's volcanoes.",
-    "Bamboos are excellent for housing in earthquake zones because they are flexible and bend without breaking.",
-    "Mayon Volcano in Albay is famous for having the world's most perfect cone shape.",
-    "The Philippine Trench is one of the deepest points in the world, reaching over 10,000 meters deep.",
-    "Mangrove forests can reduce wave height by up to 66%, protecting coastlines from storm surges.",
-    "The 'Eye' of a typhoon is calm, but the 'Eyewall' surrounding it carries the strongest winds.",
-    "Taal Volcano is a 'volcano within a lake, within a volcano, within a lake'.",
-    "If the water on a beach suddenly recedes far back, run to high ground immediately—a tsunami may be coming.",
-    "The Philippines discovers about 18-20 typhoons entering its Area of Responsibility every year.",
-    "Liquefaction can make solid ground behave like quicksand during strong earthquakes."
+  "The Philippines is located along the Pacific Ring of Fire, making it prone to earthquakes.",
+  "There are about 20 typhoons that enter the Philippine Area of Responsibility (PAR) every year.",
+  "PHIVOLCS monitors over 20 active volcanoes in the Philippines.",
+  "The West Valley Fault is a major seismic threat capable of a Magnitude 7.2 earthquake.",
+  "PAGASA's rainfall warning system uses Yellow, Orange, and Red color codes.",
+  "Mangroves act as natural barriers against storm surges and coastal erosion."
 ];
+
+export const CHARACTERS: Character[] = [
+  { type: 'Fireman', name: 'Chief Ramos', emoji: '🧑‍🚒', role: 'Response Chief', color: 'bg-orange-500', description: 'Emergency response lead with 20 years experience.' },
+  { type: 'Scientist', name: 'Dr. Solidum', emoji: '👩‍🔬', role: 'Seismology Expert', color: 'bg-blue-600', description: 'Monitors fault lines and volcanic tremors.' },
+  { type: 'Researcher', name: 'Prof. Amihan', emoji: '👨‍💻', role: 'Climate Scientist', color: 'bg-cyan-500', description: 'Expert in typhoon tracking and rainfall modeling.' },
+  { type: 'Worker', name: 'Kuya Bert', emoji: '👷', role: 'Infrastructure Tech', color: 'bg-slate-700', description: 'Ensures building safety and utility resilience.' },
+  { type: 'NGO', name: 'Sister Grace', emoji: '👩‍💼', role: 'Community Relief', color: 'bg-purple-500', description: 'Coordinates logistics and psycho-social support.' },
+  { type: 'Student', name: 'Pao', emoji: '🧑‍🎓', role: 'Safety Ambassador', color: 'bg-indigo-500', description: 'Youth lead for school preparedness programs.' },
+  { type: 'Teacher', name: 'Maam Reyes', emoji: '👩‍🏫', role: 'Safety Educator', color: 'bg-emerald-600', description: 'Trains families on Go-Bag and evacuation routes.' }
+];
+
+export const CHARACTER_QUOTES: Record<string, string[]> = {
+  'Fireman': [
+    "Check your Go-Bag batteries every 3 months!",
+    "Never cross a flooded road on foot or in a car.",
+    "Fire exits must always be clear and accessible.",
+    "Practice 'Stop, Drop, and Roll' with your siblings!",
+    "Always know two ways out of every room."
+  ],
+  'Scientist': [
+    "The ground speaks through small tremors. Listen to them.",
+    "Volcanic ash is basically pulverized rock and glass. Protect your lungs.",
+    "Fault systems move in cycles. Preparedness is the only shield."
+  ],
+  'Researcher': [
+    "Sea level rise makes storm surges more dangerous.",
+    "El Niño patterns increase the risk of extreme droughts.",
+    "Red rainfall warnings mean immediate action is required."
+  ]
+};
 
 export const MODULES: DisasterModule[] = [
   {
     id: 'mod_eq',
     type: DisasterType.Earthquake,
     title: 'Earthquake & Tsunami',
-    description: 'Tectonic shifts, liquefaction, and seismic waves.',
-    icon: '🏚️🌊', 
-    color: 'bg-orange-500',
-    learningContent: `### The Science of Tectonics
-The Philippines is a geological hotbed located at the collision zone of the **Eurasian Plate** (subducting under Luzon) and the **Philippine Sea Plate** (subducting at the Philippine Trench). This squeezing action creates the **Philippine Fault Zone (PFZ)**, a 1,200km crack splitting the archipelago from Luzon to Mindanao.
-
-### Seismic Mechanics
-* **Hypocenter vs Epicenter**: The hypocenter is the point *inside* the earth where the rupture starts. The epicenter is the point directly above it on the surface.
-* **Magnitude (Energy)**: Measured on the Moment Magnitude Scale (Mw). A magnitude 7.0 releases 32 times more energy than a 6.0.
-* **Intensity (Shaking)**: Measured by PEIS (I to X). Level VIII is "Very Destructive" where heavy objects overturn and liquefaction is widespread.
-
-### Tsunami Physics
-Tsunamis are generated by vertical displacement of the seabed.
-* **Speed**: In the deep ocean, they travel at 800 kph (speed of a jet).
-* **Shoaling**: As the wave hits shallow coastal water, friction slows the bottom part, causing the top to pile up and rise dramatically, sometimes reaching 30 meters.
-* **Drawback**: The trough of the wave often hits first, causing the sea to recede rapidly—a critical natural warning.
-
-### Structural Engineering & Safety
-* **Shear Walls**: Reinforced concrete walls that resist horizontal forces.
-* **Base Isolation**: Giant rubber bearings that separate the building from the ground, allowing it to "glide" during shaking.
-* **The "Soft Story" Flaw**: Buildings with open ground floors (like parking garages) are prone to collapse because they lack shear strength at the base.
-
-### Agriculture & Food Security
-* **Irrigation Collapse**: Earthquakes often rupture concrete irrigation canals. Farmers must have contingency plans for manual watering or drought-resistant crops.
-* **Saltwater Intrusion**: Land subsidence (sinking) along the coast can allow seawater to invade aquifers and rice paddies, permanently damaging soil fertility.`,
+    description: 'Master seismic resilience.',
+    icon: '🏚️', 
+    color: 'bg-amber-700',
+    learningContent: `### Seismic Hazards
+The Philippines is situated on the Ring of Fire. This means we are prone to frequent tremors.
+### Drop, Cover, Hold
+The standard protocol during shaking. Find a sturdy table and stay there.
+### Tsunami Warning
+Roar from the sea, receding water, or strong shaking are signs.
+### Structural Safety
+Check your walls for cracks. Anchoring heavy furniture prevents them from falling.
+### Post-Quake Safety
+Expect aftershocks. Check yourself for injuries before helping others.`,
     quizItems: [
-      {
-        id: 'q1',
-        question: 'What is the "Drop, Cover, and Hold On" method primarily designed to protect you from?',
-        choices: ['Floodwaters', 'Falling debris and structural collapse', 'Fire and smoke', 'High winds'],
-        correctIndex: 1,
-        explanation: 'The primary goal is to protect your vital organs (head and neck) from falling objects, which are the leading cause of injury in earthquakes.'
-      },
-      {
-        id: 'q2',
-        question: 'If you are near the coast and feel a strong earthquake, what should you do immediately?',
-        choices: ['Wait for an official warning', 'Go to the beach to check the water level', 'Evacuate to higher ground immediately', 'Call the police'],
-        correctIndex: 2,
-        explanation: 'Natural signs like strong shaking are your first warning. Do not wait for sirens; tsunamis can arrive in minutes.'
-      },
-      {
-        id: 'q3',
-        question: 'Which wave type arrives first during an earthquake?',
-        choices: ['S-wave', 'Surface wave', 'P-wave', 'Tidal wave'],
-        correctIndex: 2,
-        explanation: 'Primary (P) waves travel fastest and are the first to be recorded by seismographs.'
-      },
-      {
-        id: 'q4',
-        question: 'What is the difference between Magnitude and Intensity?',
-        choices: ['Same thing', 'Magnitude = Energy; Intensity = Shaking Felt', 'Intensity = Energy; Magnitude = Shaking Felt', 'Magnitude is for water; Intensity is for land'],
-        correctIndex: 1,
-        explanation: 'Magnitude is a fixed number denoting energy. Intensity varies by location based on how the shaking is perceived and the damage caused.'
-      },
-      {
-        id: 'q5',
-        question: 'Which phenomenon causes solid ground to behave like a liquid?',
-        choices: ['Sublimation', 'Liquefaction', 'Condensation', 'Erosion'],
-        correctIndex: 1,
-        explanation: 'Liquefaction happens when water-saturated soil loses strength during shaking, often causing buildings to sink or tilt.'
-      },
-      {
-        id: 'q6',
-        question: 'What is the Philippine scale used to measure Earthquake Intensity?',
-        choices: ['Richter Scale', 'Mercalli Scale', 'PEIS (PHIVOLCS Earthquake Intensity Scale)', 'Fujita Scale'],
-        correctIndex: 2,
-        explanation: 'PEIS is the specific scale used by PHIVOLCS to describe earthquake effects in the Philippines.'
-      },
-      {
-        id: 'q7',
-        question: 'Why is the "Triangle of Life" theory generally not recommended by official agencies?',
-        choices: ['It is too hard to explain', 'It relies on buildings collapsing in a specific way that is unpredictable', 'It only works for wood houses', 'It is safer than tables'],
-        correctIndex: 1,
-        explanation: 'The "Triangle of Life" assumes total pancake collapse. In modern buildings, getting under a table offers guaranteed protection from falling debris, which is more common.'
-      },
-      {
-        id: 'q8',
-        question: 'How can earthquakes permanently damage agriculture in coastal areas?',
-        choices: ['By scaring the animals', 'By shaking fruit off trees', 'Through subsidence causing saltwater intrusion', 'By heating the soil'],
-        correctIndex: 2,
-        explanation: 'Land subsidence (sinking) can bring farmland below sea level, leading to saltwater flooding that kills crops.'
-      },
-      {
-        id: 'q9',
-        question: 'The "Big One" in Metro Manila refers to a potential rupture of which fault system?',
-        choices: ['San Andreas Fault', 'West Valley Fault', 'Philippine Fault Zone', 'Manila Trench'],
-        correctIndex: 1,
-        explanation: 'The West Valley Fault traverses Metro Manila and nearby provinces and is capable of generating a Magnitude 7.2 earthquake.'
-      },
-      {
-        id: 'q10',
-        question: 'What is a "Trench"?',
-        choices: ['A deep valley on a mountain', 'A long, narrow depression on the sea floor where subduction occurs', 'A river bed', 'A type of cloud'],
-        correctIndex: 1,
-        explanation: 'Trenches, like the Philippine Trench, are subduction zones where one tectonic plate dives under another, often generating powerful earthquakes.'
-      }
+      { id: 'eq1', question: 'What is the standard action during an earthquake?', choices: ['Run outside', 'Drop, Cover, and Hold On', 'Stand in a doorway', 'Hide in a closet'], correctIndex: 1, explanation: 'Drop, Cover, and Hold On is the safest way to protect yourself from falling debris.' },
+      { id: 'eq2', question: 'What is a tsunami warning sign?', choices: ['Strong wind', 'Heavy rain', 'Sea water receding rapidly', 'Dark clouds'], correctIndex: 2, explanation: 'A rapid withdrawal of the sea is a natural warning sign that a tsunami wave is coming.' },
+      { id: 'eq3', question: 'Who monitors earthquakes in the Philippines?', choices: ['PAGASA', 'PHIVOLCS', 'MMDA', 'NDRRMC'], correctIndex: 1, explanation: 'PHIVOLCS is the primary agency for monitoring seismic and volcanic activity.' },
+      { id: 'eq4', question: 'What is "Liquefaction"?', choices: ['Solid ground turning fluid during shaking', 'Heavy rainfall', 'Lava flow', 'Wind gusts'], correctIndex: 0, explanation: 'During shaking, loose saturated soil loses strength and acts like a liquid.' },
+      { id: 'eq5', question: 'Where is the safest place during an earthquake tremor?', choices: ['Near a window', 'Under a sturdy table', 'In an elevator', 'On a balcony'], correctIndex: 1, explanation: 'A sturdy table provides cover from falling objects, the main cause of injury.' },
+      { id: 'eq6', question: 'What does the PEIS Scale measure?', choices: ['Magnitude', 'Intensity', 'Wind Speed', 'Water Depth'], correctIndex: 1, explanation: 'The PHIVOLCS Earthquake Intensity Scale measures how much the shaking is felt by people.' },
+      { id: 'eq7', question: 'If you are driving during a quake, you should:', choices: ['Speed up', 'Stop in an open area', 'Park under a bridge', 'Drive faster to a tunnel'], correctIndex: 1, explanation: 'Bridges and buildings are collapse hazards. Find an open space.' }
     ]
   },
   {
     id: 'mod_ty',
     type: DisasterType.Typhoon,
-    title: 'Typhoon & Flooding',
-    description: 'Meteorology, Coriolis effect, and agricultural resilience.',
+    title: 'Typhoon & Floods',
+    description: 'Weather and water safety.',
     icon: '🌀',
-    color: 'bg-blue-500',
-    learningContent: `### Meteorology: Anatomy of a Storm
-Tropical cyclones (Bagyo) form over warm ocean waters (>26.5°C). 
-* **Coriolis Effect**: The rotation of the Earth causes storms to spin counter-clockwise in the Northern Hemisphere. This is why typhoons generally move West-Northwest in the Philippines.
-* **The Eye**: The center is calm with sinking air.
-* **Eyewall**: The ring surrounding the eye has the strongest winds and heaviest rain.
-* **Rainbands**: Spiral bands of clouds that bring rain and tornadoes far from the center.
-
-### Classification (PAGASA)
-* **Tropical Depression**: Up to 61 kph.
-* **Tropical Storm**: 62-88 kph.
-* **Severe Tropical Storm**: 89-117 kph.
-* **Typhoon**: 118-184 kph.
-* **Super Typhoon**: >185 kph.
-
-### Agriculture: Crop Resilience
-Typhoons are the most destructive hazard to Philippine agriculture.
-* **Mitigation**: Planting wind-break trees, harvesting early when warnings are raised (early warning action), and using flood-tolerant rice varieties (submergence-tolerant).
-* **Fisheries**: Fish cages must be lowered or secured. Fishponds often overflow, causing massive stock loss.
-
-### Hydrology: Flooding
-* **Flash Floods**: Occur within 6 hours of rain. Common in mountainous areas (CAR, Rizal) where steep slopes channel water rapidly.
-* **Riverine Floods**: Gradual rise of water in major basins (Cagayan, Pampanga, Agusan). Can last for weeks.
-* **Urban Flooding**: Caused by clogged drainage and concrete surfaces preventing soil absorption.`,
+    color: 'bg-blue-600',
+    learningContent: `### Storm Signals
+PAGASA signals range from 1 to 5. Higher signals mean stronger winds.
+### Flood Depth
+6 inches of water can knock you down. 2 feet can float a car.
+### Go-Bag
+Must have 72 hours of supplies including food, water, and medicine.
+### Electrical Safety
+Turn off the main power switch if flooding enters your home.
+### Rainfall Warning
+Yellow = Monitor. Orange = Alert. Red = Evacuate.`,
     quizItems: [
-      {
-        id: 'q1',
-        question: 'What is the minimum wind speed for a cyclone to be classified as a "Super Typhoon" by PAGASA?',
-        choices: ['150 kph', '185 kph', '220 kph', '300 kph'],
-        correctIndex: 1,
-        explanation: 'PAGASA updated its classification; a Super Typhoon has maximum sustained winds of more than 185 kph.'
-      },
-      {
-        id: 'q2',
-        question: 'Which part of a typhoon contains the strongest winds?',
-        choices: ['The Eye', 'The Eyewall', 'The Outer Rainbands', 'The Tail'],
-        correctIndex: 1,
-        explanation: 'The eyewall is the ring of towering thunderstorms surrounding the eye where the most severe weather occurs.'
-      },
-      {
-        id: 'q3',
-        question: 'What effect causes typhoons to spin counter-clockwise in the Northern Hemisphere?',
-        choices: ['Doppler Effect', 'Butterfly Effect', 'Coriolis Effect', 'Greenhouse Effect'],
-        correctIndex: 2,
-        explanation: 'The Coriolis Effect, caused by Earth\'s rotation, deflects moving air to the right in the Northern Hemisphere, creating the spin.'
-      },
-      {
-        id: 'q4',
-        question: 'What color Rainfall Warning indicates "Evacuation"?',
-        choices: ['Yellow', 'Green', 'Orange', 'Red'],
-        correctIndex: 3,
-        explanation: 'Red Warning means torrential rainfall (>30mm/hr), serious flooding is expected, and evacuation is often required.'
-      },
-      {
-        id: 'q5',
-        question: 'Which rice variety characteristic is most useful in flood-prone areas?',
-        choices: ['Drought-tolerant', 'Submergence-tolerant', 'Insect-resistant', 'Tall stalks'],
-        correctIndex: 1,
-        explanation: 'Submergence-tolerant rice (like "Scuba rice") can survive being underwater for up to two weeks.'
-      }
-    ]
-  },
-  {
-    id: 'mod_vol',
-    type: DisasterType.Volcano,
-    title: 'Volcanic Eruption',
-    description: 'Geothermal energy, ash chemistry, and lahar flows.',
-    icon: '🌋',
-    color: 'bg-red-600',
-    learningContent: `### Geology: Types of Eruptions
-* **Phreatic**: Steam-driven explosions caused by water heating up (e.g., Taal 2020 initial blast).
-* **Magmatic**: Explosive release of gas and magma.
-* **Plinian**: The most violent type, creating massive columns of gas and ash into the stratosphere (e.g., Pinatubo 1991).
-
-### Volcanic Hazards
-* **Pyroclastic Flow**: Superheated gas and rock racing down slopes at >80 kph. Impossible to outrun.
-* **Lahar**: Volcanic mudflows. Rain mobilizes old ash deposits, creating concrete-like destruction.
-* **Vog (Volcanic Smog)**: Sulfur dioxide (SO2) reacting with sunlight and moisture. Hazardous to lungs.`,
-    quizItems: [
-      {
-        id: 'q1',
-        question: 'What is a "Phreatic" eruption?',
-        choices: ['Magma-driven', 'Steam-driven', 'Lava flow only', 'Invisible eruption'],
-        correctIndex: 1,
-        explanation: 'Phreatic eruptions occur when groundwater is heated by magma, flashing to steam and causing an explosion without necessarily ejecting fresh magma.'
-      },
-      {
-        id: 'q2',
-        question: 'What is the most deadly hazard of a volcano, consisting of superheated gas and rocks?',
-        choices: ['Lava flow', 'Pyroclastic Flow', 'Ashfall', 'Earthquake'],
-        correctIndex: 1,
-        explanation: 'Pyroclastic flows travel at high speeds and high temperatures, destroying everything in their path. You cannot outrun them.'
-      }
-    ]
-  },
-  {
-    id: 'mod_ls',
-    type: DisasterType.Landslide,
-    title: 'Landslide',
-    description: 'Geomorphology, shear stress, and slope stabilization.',
-    icon: '⛰️',
-    color: 'bg-yellow-700',
-    learningContent: `### Geomorphology: Why Slopes Fail
-A landslide occurs when the **Shear Stress** (gravity pulling soil down) exceeds the **Shear Strength** (friction and cohesion holding it in place).
-* **Triggers**: Heavy rain (increases weight, decreases friction), Earthquakes (shaking loosens bond), or Excavation (removing support).
-* **Soil Saturation**: Water fills the gaps between soil particles (pore pressure), pushing them apart and turning the slope into a slurry.
-
-### Warning Signs
-* **Drunken Forests**: Trees tilting at odd angles.
-* **Cracks**: New cracks in foundations, roads, or soil.
-* **Springs**: New water seeps appearing on slopes.`,
-    quizItems: [
-      {
-        id: 'q1',
-        question: 'What happens to soil physics when it becomes saturated with water?',
-        choices: ['It becomes stronger', 'Pore water pressure increases, reducing friction', 'It becomes lighter', 'It turns into rock'],
-        correctIndex: 1,
-        explanation: 'Water lubricates the soil particles and pushes them apart (buoyancy), drastically reducing the friction that holds the slope together.'
-      },
-      {
-        id: 'q2',
-        question: 'What does the term "Drunken Forest" indicate?',
-        choices: ['Trees fermenting fruit', 'Trees tilting due to slow ground movement (creep)', 'A forest with no leaves', 'Trees struck by lightning'],
-        correctIndex: 1,
-        explanation: 'Tilting trees indicate that the ground beneath them is slowly shifting or creeping downslope.'
-      }
+      { id: 'ty1', question: 'What rainfall color means "Evacuate"?', choices: ['Yellow', 'Orange', 'Red', 'Blue'], correctIndex: 2, explanation: 'Red rainfall warning indicates severe flooding is imminent; evacuate immediately.' },
+      { id: 'ty2', question: 'How much water can sweep a car away?', choices: ['1 inch', '2 feet', '6 inches', '1 foot'], correctIndex: 1, explanation: 'Two feet of moving water can float and sweep away most vehicles.' },
+      { id: 'ty3', question: 'What is the calm center of a typhoon called?', choices: ['The Core', 'The Eye', 'The Wall', 'The Tail'], correctIndex: 1, explanation: 'The Eye is the calmest part, but the strongest winds follow immediately in the eyewall.' },
+      { id: 'ty4', question: 'A Signal No. 4 typhoon has winds of:', choices: ['30-60 kph', '118-184 kph', 'Over 185 kph', 'Over 220 kph'], correctIndex: 1, explanation: 'Signal No. 4 corresponds to very strong winds capable of significant damage.' },
+      { id: 'ty5', question: 'Which agency provides weather forecasts?', choices: ['PHIVOLCS', 'PAGASA', 'DENR', 'DOH'], correctIndex: 1, explanation: 'PAGASA is the national agency for weather and climate information.' }
     ]
   },
   {
     id: 'mod_ss',
     type: DisasterType.StormSurge,
     title: 'Storm Surge',
-    description: 'Oceanography, bathymetry, and coastal defense.',
+    description: 'Coastal flood protection.',
     icon: '🌊',
-    color: 'bg-teal-600',
-    learningContent: `### Oceanography: Mechanics of a Surge
-A storm surge is NOT a tsunami. It is driven by wind.
-* **Wind Setup**: Strong winds push water toward the shore.
-* **Pressure Setup**: Low pressure in the eye of the storm allows the ocean surface to rise slightly (inverse barometer effect), though wind is the main driver.
-* **Bathymetry**: Shallow, gently sloping continental shelves (like Leyte Gulf) allow water to pile up higher than deep, steep coasts.`,
+    color: 'bg-sky-700',
+    learningContent: `### Marine Hazard
+Sudden rise in sea level caused by cyclone winds and low atmospheric pressure.
+### Protection
+Evacuate at least 500m inland or to high ground before the storm makes landfall.
+### Myth
+It is NOT a tsunami. Tsunami is seismic; Storm Surge is meteorological.
+### Vulnerable Areas
+Coastal communities with shallow shorelines are at highest risk.
+### Safety Action
+Never stay in a beach house during a Signal 3 or higher typhoon if storm surges are warned.`,
     quizItems: [
-        {
-        id: 'q1',
-        question: 'Which factor contributes MOST to the height of a storm surge?',
-        choices: ['Low pressure', 'Strong winds pushing water', 'Heavy rain', 'Earth rotation'],
-        correctIndex: 1,
-        explanation: 'While low pressure helps, the sheer force of wind piling water up against the coast is the dominant factor.'
-      }
+      { id: 'ss1', question: 'What causes a storm surge?', choices: ['Earthquakes', 'Cyclone winds and low pressure', 'Underwater landslides', 'Melting ice'], correctIndex: 1, explanation: 'Storm surges are primarily driven by the intense winds of a tropical cyclone pushing water toward the coast.' },
+      { id: 'ss2', question: 'Which city suffered massive storm surges in 2013?', choices: ['Davao', 'Manila', 'Tacloban', 'Baguio'], correctIndex: 2, explanation: 'Super Typhoon Yolanda (Haiyan) brought catastrophic surges to Tacloban City.' },
+      { id: 'ss3', question: 'How far inland should you evacuate if a surge is expected?', choices: ['5 meters', '500 meters or more', 'Stay at the shore', '10 meters'], correctIndex: 1, explanation: 'Storm surges can reach several kilometers inland. 500m is the minimum recommended safe distance.' }
     ]
   },
   {
-    id: 'mod_ind',
-    type: DisasterType.Industrial,
-    title: 'Industrial Hazards',
-    description: 'Toxicology, chemical safety, and fire dynamics.',
-    icon: '🏭',
-    color: 'bg-gray-600',
-    learningContent: `### Chemical Safety
-* **GHS Symbols**: The Globally Harmonized System uses diamond symbols. 
-    * *Flammable* (Fire)
-    * *Corrosive* (Test tubes pouring on hand/metal)
-    * *Health Hazard* (Person with star on chest - carcinogens).
-* **SDS (Safety Data Sheet)**: The 16-section document that MUST be available for every chemical. It lists First Aid, Firefighting, and Handling.`,
+    id: 'mod_vo',
+    type: DisasterType.Volcano,
+    title: 'Volcanic Eruption',
+    description: 'Ash and lahar protection.',
+    icon: '🌋',
+    color: 'bg-red-700',
+    learningContent: `### Alert Levels
+Range from 0 to 5. Level 5 means a hazardous eruption is in progress.
+### Ashfall
+Fine rock fragments. They are abrasive and dangerous for lungs and eyes.
+### Lahar
+Volcanic mudflows triggered by heavy rain. They move very fast down mountain slopes.
+### Safety Gear
+Wear N95 masks, goggles, and long-sleeved clothing during ashfall.
+### Exclusion Zone
+Always respect the Permanent Danger Zone (PDZ) around active volcanoes.`,
     quizItems: [
-        {
-        id: 'q1',
-        question: 'What does the GHS symbol of a "Silhouette of a person with a star on their chest" mean?',
-        choices: ['Super hero', 'Health Hazard (Carcinogen/Mutagen)', 'Explosive', 'Radioactive'],
-        correctIndex: 1,
-        explanation: 'This symbol indicates serious long-term health hazards like cancer, respiratory sensitization, or reproductive toxicity.'
-      }
+      { id: 'vo1', question: 'What is the best mask for ashfall?', choices: ['Surgical mask', 'N95 mask', 'Cloth mask', 'Gas mask'], correctIndex: 1, explanation: 'N95 masks filter the fine, glass-like particles of volcanic ash.' },
+      { id: 'vo2', question: 'What is Lahar?', choices: ['Hot lava', 'Volcanic mudflow', 'Smoke cloud', 'Acid rain'], correctIndex: 1, explanation: 'Lahar is a mixture of water and volcanic debris that flows like wet concrete.' },
+      { id: 'vo3', question: 'Alert Level 4 means:', choices: ['Normal', 'Quiet', 'Hazardous eruption imminent', 'Quiet status'], correctIndex: 2, explanation: 'Alert Level 4 indicates that a hazardous eruption is expected within hours or days.' }
     ]
   },
   {
-    id: 'mod_epi',
-    type: DisasterType.Epidemic,
-    title: 'Epidemics',
-    description: 'Virology, immunology, and public health.',
-    icon: '🦠',
-    color: 'bg-green-600',
-    learningContent: `### Biology: The Enemy
-* **Virus**: A genetic code (DNA/RNA) inside a protein shell. It cannot reproduce on its own; it hijacks host cells. (e.g., Dengue, COVID-19).
-* **Bacteria**: Single-celled organisms. Some are helpful, some cause disease (e.g., Leptospirosis). Treated with antibiotics.
-* **Vector**: An organism (mosquito, rat) that transmits the pathogen.`,
+    id: 'mod_ls',
+    type: DisasterType.Landslide,
+    title: 'Landslide',
+    description: 'Slope stability and soil hazards.',
+    icon: '⛰️',
+    color: 'bg-emerald-800',
+    learningContent: `### Warning Signs
+New cracks in ground, tilting trees or poles, or sudden water seepage.
+### Triggers
+Heavy rain, earthquakes, or excavation near slopes.
+### Survival
+If caught, curl into a ball and protect your head. Stay away from valleys and paths.
+### Prevention
+Planting deep-rooted trees helps stabilize soil. Avoid building houses at the base of steep hills.
+### Immediate Action
+If you hear a rumbling sound, evacuate the area immediately.`,
     quizItems: [
-        {
-        id: 'q1',
-        question: 'What is "R-naught" (R0) in epidemiology?',
-        choices: ['The number of recoveries', 'The basic reproduction number (how many people one case infects)', 'The death rate', 'The number of hospitals'],
-        correctIndex: 1,
-        explanation: 'R0 indicates the contagiousness of a pathogen. If R0 is 3, one person infects 3 others on average.'
-      }
+      { id: 'ls1', question: 'What is a major warning sign of an impending landslide?', choices: ['New cracks in the ground', 'Falling leaves', 'Cold weather', 'Low humidity'], correctIndex: 0, explanation: 'Cracks in the ground or foundations indicate the soil is beginning to shift.' },
+      { id: 'ls2', question: 'What should you do if you are inside during a landslide?', choices: ['Run outside immediately', 'Stay inside and get under a sturdy table', 'Open all windows', 'Go to the basement'], correctIndex: 1, explanation: 'Debris moves fast; staying under a sturdy object protects you from structural collapse.' }
+    ]
+  },
+  {
+    id: 'mod_fi',
+    type: DisasterType.Fire,
+    title: 'Fire Hazards',
+    description: 'Prevention and response.',
+    icon: '🔥',
+    color: 'bg-orange-600',
+    learningContent: `### PASS Method
+Pull the pin, Aim the nozzle, Squeeze the handle, Sweep side to side.
+### Stop, Drop, Roll
+If your clothes catch fire, do not run. It fuels the flames.
+### Smoke Survival
+Crawl low under the smoke. Cleaner air is found near the floor.
+### Fire Exit
+Never lock fire exits with a key that is not nearby. Keep pathways clear.
+### Cooking Safety
+Never leave an open flame unattended. Keep flammable items away from the stove.`,
+    quizItems: [
+      { id: 'fi1', question: 'What does PASS stand for?', choices: ['Push, Aim, Stop, Stay', 'Pull, Aim, Squeeze, Sweep', 'Point, Aim, Start, Stop', 'Pull, Ask, Sit, Smile'], correctIndex: 1, explanation: 'PASS is the universal method for using a fire extinguisher effectively.' },
+      { id: 'fi2', question: 'What should you do if your clothes catch fire?', choices: ['Run fast', 'Stop, Drop, and Roll', 'Jump in water', 'Take them off'], correctIndex: 1, explanation: 'Stop, Drop, and Roll smothers the flames and prevents them from reaching your face.' }
     ]
   }
 ];
 
 export const PH_REGIONS: RegionData[] = [
-    { 
-        id: 'NCR', 
-        name: 'NCR (Metro Manila)', 
-        riskLevel: 'High', 
-        commonHazards: [DisasterType.Earthquake, DisasterType.Typhoon, DisasterType.Epidemic], 
-        info: '• **Seismic Risk**: The West Valley Fault runs directly through Marikina, Pasig, and Taguig. A M7.2 earthquake could cause severe structural damage. \n• **Urban Flooding**: High concrete coverage prevents water absorption, leading to rapid street flooding. \n• **Density**: 13M+ population makes it a hotspot for viral transmission.' 
-    },
-    { 
-        id: 'CAR', 
-        name: 'CAR (Cordillera)', 
-        riskLevel: 'High', 
-        commonHazards: [DisasterType.Landslide], 
-        info: '• **Topography**: Steep slopes (>50 degrees) are highly unstable during rain. \n• **Hazards**: Halsema Highway is frequently blocked by rockslides. \n• **Agriculture**: Frost damage ("Andap") affects vegetable crops in Benguet during cold months.' 
-    },
-    { 
-        id: 'R1', 
-        name: 'Region I (Ilocos)', 
-        riskLevel: 'Medium', 
-        commonHazards: [DisasterType.Typhoon, DisasterType.Earthquake], 
-        info: '• **Coastal**: Faces the West Philippine Sea, prone to storm surges. \n• **Seismic**: The Manila Trench offshore poses a tsunami threat. \n• **Agriculture**: Tobacco and garlic crops are vulnerable to excess moisture.' 
-    },
-    { 
-        id: 'R2', 
-        name: 'Region II (Cagayan Valley)', 
-        riskLevel: 'High', 
-        commonHazards: [DisasterType.Typhoon, DisasterType.StormSurge], 
-        info: '• **Catchment Basin**: The Cagayan River drains water from multiple mountain ranges, causing massive floods (e.g., Ulysses 2020). \n• **Agriculture**: Major corn and rice producer; floods cause billions in losses.' 
-    },
-    { 
-        id: 'R3', 
-        name: 'Region III (Central Luzon)', 
-        riskLevel: 'High', 
-        commonHazards: [DisasterType.Typhoon, DisasterType.Volcano], 
-        info: '• **Lahar**: Rain mobilizes old ash deposits from Mt. Pinatubo, clogging river channels. \n• **Food Security**: Known as the "Rice Granary"; typhoons here impact national rice supply.' 
-    },
-    { 
-        id: 'R4A', 
-        name: 'Region IV-A (Calabarzon)', 
-        riskLevel: 'High', 
-        commonHazards: [DisasterType.Volcano, DisasterType.Earthquake], 
-        info: '• **Taal Volcano**: Proximity to the Permanent Danger Zone involves Batangas and Cavite. \n• **Industrial**: High concentration of factories increases chemical hazard risks during earthquakes.' 
-    },
-    { 
-        id: 'R4B', 
-        name: 'Region IV-B (Mimaropa)', 
-        riskLevel: 'Medium', 
-        commonHazards: [DisasterType.Typhoon, DisasterType.Landslide], 
-        info: '• **Island Hazards**: Oriental Mindoro is prone to flooding; Palawan faces fewer typhoons but has landslide risks in mining areas. \n• **Maritime**: Inter-island travel is frequently suspended during gales.' 
-    },
-    { 
-        id: 'R5', 
-        name: 'Region V (Bicol)', 
-        riskLevel: 'High', 
-        commonHazards: [DisasterType.Typhoon, DisasterType.Volcano], 
-        info: '• **Typhoon Pathway**: The first point of contact for many Pacific typhoons. \n• **Volcanism**: Mt. Mayon and Mt. Bulusan are active. Ashfall affects abaca and coconut crops.' 
-    },
-    { 
-        id: 'R6', 
-        name: 'Region VI (Western Visayas)', 
-        riskLevel: 'Medium', 
-        commonHazards: [DisasterType.Typhoon, DisasterType.Volcano], 
-        info: '• **Mt. Kanlaon**: Active volcano on Negros island. \n• **Oil Spill Risk**: Guimaras Strait is a busy shipping lane (e.g., 2006 Solar 1 spill). \n• **Agriculture**: Sugar cane fields are susceptible to wind damage.' 
-    },
-    { 
-        id: 'R7', 
-        name: 'Region VII (Central Visayas)', 
-        riskLevel: 'Medium', 
-        commonHazards: [DisasterType.Earthquake, DisasterType.Landslide], 
-        info: '• **Bohol Fault**: Source of the 2013 M7.2 Earthquake. \n• **Landslides**: Cebu\'s transcentral highway has steep, limestone slopes prone to slides. \n• **Urban**: Metro Cebu faces severe drainage issues.' 
-    },
-    { 
-        id: 'R8', 
-        name: 'Region VIII (Eastern Visayas)', 
-        riskLevel: 'High', 
-        commonHazards: [DisasterType.Typhoon, DisasterType.StormSurge], 
-        info: '• **Surge Risk**: Leyte Gulf\'s shape amplifies storm surges (e.g., Yolanda). \n• **Tectonics**: The Philippine Trench runs parallel to the coast, posing high seismic risk.' 
-    },
-    { 
-        id: 'R9', 
-        name: 'Region IX (Zamboanga)', 
-        riskLevel: 'Medium', 
-        commonHazards: [DisasterType.StormSurge, DisasterType.Earthquake], 
-        info: '• **Tsunami History**: The 1976 Moro Gulf earthquake caused a devastating tsunami here. \n• **Flooding**: Zamboanga City lowlands are prone to flash floods.' 
-    },
-    { 
-        id: 'R10', 
-        name: 'Region X (Northern Mindanao)', 
-        riskLevel: 'Medium', 
-        commonHazards: [DisasterType.Typhoon], 
-        info: '• **Flash Floods**: Deforestation in uplands exacerbates runoff, as seen in TS Sendong (2011) in Cagayan de Oro and Iligan.' 
-    },
-    { 
-        id: 'R11', 
-        name: 'Region XI (Davao)', 
-        riskLevel: 'Medium', 
-        commonHazards: [DisasterType.Earthquake, DisasterType.Landslide], 
-        info: '• **Seismic Swarms**: Series of strong quakes occurred in 2019. \n• **Mining**: Compostela Valley (Davao de Oro) has very high landslide susceptibility due to mining tunnels.' 
-    },
-    { 
-        id: 'R12', 
-        name: 'Region XII (Soccsksargen)', 
-        riskLevel: 'High', 
-        commonHazards: [DisasterType.Earthquake, DisasterType.Typhoon], 
-        info: '• **Cotabato Trench**: A major subduction zone. \n• **Flood Plains**: The Ligawasan Marsh can overflow, affecting North Cotabato and Maguindanao areas.' 
-    },
-    { 
-        id: 'R13', 
-        name: 'Region XIII (Caraga)', 
-        riskLevel: 'High', 
-        commonHazards: [DisasterType.Typhoon, DisasterType.Landslide], 
-        info: '• **Mining Capital**: Surigao del Norte/Sur has extensive nickel mining, loosening soil. \n• **Deep Trench**: Proximity to the Philippine Trench makes it a seismic hotspot.' 
-    },
-    { 
-        id: 'BARMM', 
-        name: 'BARMM', 
-        riskLevel: 'High', 
-        commonHazards: [DisasterType.Earthquake, DisasterType.Epidemic], 
-        info: '• **Complex Emergency**: Conflict often hampers disaster response and aid delivery. \n• **Tsunami**: The Celebes Sea poses a threat to coastal communities in Sulu and Tawi-Tawi.' 
-    }
+  { id: 'R1', name: 'Ilocos Region', islandGroup: 'Luzon', riskLevel: 'Medium', commonHazards: [DisasterType.Typhoon, DisasterType.Earthquake], info: 'Vulnerable to northern typhoons and Manila Trench tremors.', details: ['High coastal erosion', 'Manila Trench seismic risk', 'Frequent typhoon Landfalls'], coordinates: { x: 75, y: 80 }, color: '#27ae60' },
+  { id: 'CAR', name: 'Cordillera (CAR)', islandGroup: 'Luzon', riskLevel: 'High', commonHazards: [DisasterType.Landslide], info: 'Mountainous terrain prone to massive landslides.', details: ['Frequent road blockages', 'Soil saturation risks', 'Sinkholes in Baguio'], coordinates: { x: 100, y: 95 }, color: '#1e8449' },
+  { id: 'R2', name: 'Cagayan Valley', islandGroup: 'Luzon', riskLevel: 'High', commonHazards: [DisasterType.Flood, DisasterType.Typhoon], info: 'Major river basin prone to widespread flooding.', details: ['Cagayan River overflow', 'Direct typhoon landfall path', 'Agricultural damage risk'], coordinates: { x: 135, y: 105 }, color: '#2ecc71' },
+  { id: 'R3', name: 'Central Luzon', islandGroup: 'Luzon', riskLevel: 'High', commonHazards: [DisasterType.Volcano, DisasterType.Flood], info: 'Low-lying floodplains and home to Mt. Pinatubo.', details: ['Lahar risks from Pinatubo', 'Pampanga River flooding', 'Storm surges in Aurora'], coordinates: { x: 95, y: 155 }, color: '#229954' },
+  { id: 'NCR', name: 'Metro Manila', islandGroup: 'Luzon', riskLevel: 'High', commonHazards: [DisasterType.Earthquake, DisasterType.Flood], info: 'High density urban center atop the West Valley Fault.', details: ['West Valley Fault (The Big One)', 'Severe urban flooding', 'Liquefaction risks'], coordinates: { x: 110, y: 180 }, color: '#e74c3c' },
+  { id: 'R4A', name: 'CALABARZON', islandGroup: 'Luzon', riskLevel: 'High', commonHazards: [DisasterType.Volcano, DisasterType.Typhoon], info: 'Active volcanoes and large industrial hubs.', details: ['Taal Volcano unrest', 'Industrial chemical risks', 'Laguna de Bay flooding'], coordinates: { x: 125, y: 210 }, color: '#c0392b' },
+  { id: 'R4B', name: 'MIMAROPA', islandGroup: 'Luzon', riskLevel: 'Medium', commonHazards: [DisasterType.Typhoon, DisasterType.StormSurge], info: 'Archipelagic region vulnerable to sea hazards.', details: ['Island isolation in storms', 'Marine safety risks', 'Storm surges in Palawan'], coordinates: { x: 70, y: 250 }, color: '#27ae60' },
+  { id: 'R5', name: 'Bicol Region', islandGroup: 'Luzon', riskLevel: 'High', commonHazards: [DisasterType.Typhoon, DisasterType.Volcano], info: 'Typhoon Alley and home to the active Mayon Volcano.', details: ['Mayon Lahar flows', 'Strong Pacific landfalls', 'Coastal flooding'], coordinates: { x: 190, y: 235 }, color: '#a93226' },
+  { id: 'R6', name: 'Western Visayas', islandGroup: 'Visayas', riskLevel: 'Medium', commonHazards: [DisasterType.Flood, DisasterType.Typhoon], info: 'Vulnerable to riverine floods and coastal surges.', details: ['Panay River flooding', 'Boracay coastal erosion', 'Maritime disaster risk'], coordinates: { x: 115, y: 320 }, color: '#2ecc71' },
+  { id: 'R7', name: 'Central Visayas', islandGroup: 'Visayas', riskLevel: 'High', commonHazards: [DisasterType.Earthquake, DisasterType.Typhoon], info: 'Bohol and Cebu are seismically active with several faults.', details: ['Bohol Fault activity', 'Urban flooding in Cebu', 'Coral reef degradation'], coordinates: { x: 170, y: 360 }, color: '#d35400' },
+  { id: 'R8', name: 'Eastern Visayas', islandGroup: 'Visayas', riskLevel: 'High', commonHazards: [DisasterType.Typhoon, DisasterType.StormSurge], info: 'The frequent gateway for super typhoons.', details: ['Extreme storm surge risk', 'Landslide prone mountains', 'Tacloban coastal risk'], coordinates: { x: 220, y: 325 }, color: '#e67e22' },
+  { id: 'R9', name: 'Zamboanga', islandGroup: 'Mindanao', riskLevel: 'Medium', commonHazards: [DisasterType.Flood, DisasterType.Earthquake], info: 'Coastal cities at risk of surge and tremors.', details: ['Sulu Trench seismic risk', 'Coastal flooding', 'Landslide in mountains'], coordinates: { x: 85, y: 430 }, color: '#27ae60' },
+  { id: 'R10', name: 'Northern Mindanao', islandGroup: 'Mindanao', riskLevel: 'Medium', commonHazards: [DisasterType.Flood, DisasterType.Landslide], info: 'Flash flood risk from mountain rivers.', details: ['CDO River flooding', 'Camiguin volcanic monitoring', 'Mountain landslides'], coordinates: { x: 170, y: 430 }, color: '#2ecc71' },
+  { id: 'R11', name: 'Davao Region', islandGroup: 'Mindanao', riskLevel: 'High', commonHazards: [DisasterType.Earthquake, DisasterType.Flood], info: 'Seismically active with recent strong tremors.', details: ['Mount Apo monitoring', 'Davao River flooding swarms', 'Coastal surge risk'], coordinates: { x: 235, y: 470 }, color: '#ba4a00' },
+  { id: 'R12', name: 'SOCCSKSARGEN', islandGroup: 'Mindanao', riskLevel: 'Medium', commonHazards: [DisasterType.Earthquake, DisasterType.Flood], info: 'Prone to tremors and river basin flooding.', details: ['Cotabato basin flooding', 'High seismic activity', 'Agricultural drought'], coordinates: { x: 185, y: 495 }, color: '#28b463' },
+  { id: 'R13', name: 'Caraga', islandGroup: 'Mindanao', riskLevel: 'High', commonHazards: [DisasterType.Flood, DisasterType.Typhoon], info: 'The gateway for typhoons entering Mindanao.', details: ['Agusan River floods', 'Pacific storm landfalls', 'Earthquake swarms'], coordinates: { x: 245, y: 415 }, color: '#1d8348' },
+  { id: 'BARMM', name: 'BARMM', islandGroup: 'Mindanao', riskLevel: 'High', commonHazards: [DisasterType.Flood], info: 'Severe flooding risk in the Liguasan Marsh areas.', details: ['Marshland flooding', 'Typhoon landfall (Sulu)', 'Landslide in Basilan'], coordinates: { x: 135, y: 475 }, color: '#145a32' }
 ];
